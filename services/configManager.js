@@ -4,6 +4,7 @@ const path = require('path');
 class ConfigManager {
   constructor() {
     this.configPath = path.join(__dirname, '../config.json');
+    this.openclawConfigPath = path.join(__dirname, '../config/openclaw.json');
     this.config = this.loadConfig();
   }
 
@@ -11,7 +12,7 @@ class ConfigManager {
     try {
       if (fs.existsSync(this.configPath)) {
         const data = fs.readFileSync(this.configPath, 'utf8');
-        return JSON.parse(data);
+        return { ...this.getDefaultConfig(), ...JSON.parse(data) };
       }
     } catch (error) {
       console.error('加载配置文件失败:', error);
@@ -22,8 +23,11 @@ class ConfigManager {
   getDefaultConfig() {
     return {
       apiKey: '',
-      model: 'DeepSeek Chat',
-      wechatEnabled: true,
+      apiKeyEnv: 'DEEPSEEK_API_KEY',
+      model: 'deepseek',
+      providerUrl: 'https://api.deepseek.com/v1',
+      port: 18789,
+      workspace: './config/workspace',
       autoStart: false,
       logLevel: 'info',
       license: {
@@ -51,15 +55,54 @@ class ConfigManager {
 
   setApiKey(apiKey) {
     this.config.apiKey = apiKey;
+    this.updateOpenclawConfig();
     return this.saveConfig();
   }
 
   getModel() {
-    return this.config.model || 'DeepSeek Chat';
+    return this.config.model || 'deepseek';
   }
 
   setModel(model) {
     this.config.model = model;
+    return this.saveConfig();
+  }
+
+  getProviderUrl() {
+    return this.config.providerUrl || 'https://api.deepseek.com/v1';
+  }
+
+  setProviderUrl(url) {
+    this.config.providerUrl = url;
+    this.updateOpenclawConfig();
+    return this.saveConfig();
+  }
+
+  getApiKeyEnv() {
+    return this.config.apiKeyEnv || 'DEEPSEEK_API_KEY';
+  }
+
+  setApiKeyEnv(envName) {
+    this.config.apiKeyEnv = envName;
+    this.updateOpenclawConfig();
+    return this.saveConfig();
+  }
+
+  getPort() {
+    return this.config.port || 18789;
+  }
+
+  setPort(port) {
+    this.config.port = port;
+    return this.saveConfig();
+  }
+
+  getWorkspace() {
+    return this.config.workspace || './config/workspace';
+  }
+
+  setWorkspace(workspace) {
+    this.config.workspace = workspace;
     return this.saveConfig();
   }
 
@@ -90,6 +133,27 @@ class ConfigManager {
 
   getAll() {
     return { ...this.config };
+  }
+
+  updateOpenclawConfig() {
+    try {
+      if (fs.existsSync(this.openclawConfigPath)) {
+        const data = fs.readFileSync(this.openclawConfigPath, 'utf8');
+        const openclawConfig = JSON.parse(data);
+        
+        if (openclawConfig.models && openclawConfig.models.providers) {
+          const providerKey = Object.keys(openclawConfig.models.providers)[0];
+          if (providerKey) {
+            openclawConfig.models.providers[providerKey].baseUrl = this.getProviderUrl();
+            openclawConfig.models.providers[providerKey].apiKey = `\${${this.getApiKeyEnv()}}`;
+          }
+        }
+
+        fs.writeFileSync(this.openclawConfigPath, JSON.stringify(openclawConfig, null, 2));
+      }
+    } catch (error) {
+      console.error('更新 OpenClaw 配置失败:', error);
+    }
   }
 }
 

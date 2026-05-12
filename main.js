@@ -1,5 +1,6 @@
 const { app, BrowserWindow, Menu, Tray, ipcMain } = require('electron')
 const path = require('path')
+const fs = require('fs')
 const ServiceManager = require('./services/serviceManager')
 const ConfigManager = require('./services/configManager')
 
@@ -173,6 +174,105 @@ ipcMain.on('setup', async (event) => {
     event.reply('setup-completed', { success: true })
   } catch (error) {
     event.reply('setup-completed', { success: false, error: error.message })
+  }
+})
+
+ipcMain.on('get-all-config', (event) => {
+  const config = configManager.getAll()
+  event.reply('all-config', config)
+})
+
+ipcMain.on('set-provider-url', (event, url) => {
+  const result = configManager.setProviderUrl(url)
+  event.reply('config-saved', { success: result })
+})
+
+ipcMain.on('set-api-key-env', (event, envName) => {
+  const result = configManager.setApiKeyEnv(envName)
+  event.reply('config-saved', { success: result })
+})
+
+ipcMain.on('set-port', (event, port) => {
+  const result = configManager.setPort(port)
+  event.reply('config-saved', { success: result })
+})
+
+ipcMain.on('set-workspace', (event, workspace) => {
+  const result = configManager.setWorkspace(workspace)
+  event.reply('config-saved', { success: result })
+})
+
+ipcMain.on('apply-model-config', (event, config) => {
+  try {
+    const openclawConfigPath = path.join(__dirname, 'config', 'openclaw.json')
+    
+    if (!fs.existsSync(openclawConfigPath)) {
+      event.reply('model-config-applied', { success: false, error: '配置文件不存在' })
+      return
+    }
+
+    const raw = fs.readFileSync(openclawConfigPath, 'utf-8')
+    const openclawConfig = JSON.parse(raw)
+
+    if (!openclawConfig.models) {
+      openclawConfig.models = { mode: 'merge', providers: {} }
+    }
+    if (!openclawConfig.models.providers) {
+      openclawConfig.models.providers = {}
+    }
+
+    const providerId = config.provider
+    const apiType = config.api || 'openai-completions'
+    
+    if (!openclawConfig.models.providers[providerId]) {
+      openclawConfig.models.providers[providerId] = {
+        api: apiType,
+        baseUrl: config.baseUrl
+      }
+    } else {
+      openclawConfig.models.providers[providerId].api = apiType
+      openclawConfig.models.providers[providerId].baseUrl = config.baseUrl
+    }
+
+    if (config.apiKey) {
+      openclawConfig.models.providers[providerId].apiKey = config.apiKey
+    } else if (openclawConfig.models.providers[providerId].apiKey) {
+      delete openclawConfig.models.providers[providerId].apiKey
+    }
+
+    if (!openclawConfig.models.providers[providerId].models) {
+      openclawConfig.models.providers[providerId].models = []
+    }
+
+    const existingModelIndex = openclawConfig.models.providers[providerId].models.findIndex(m => m.id === config.model)
+    if (existingModelIndex >= 0) {
+      openclawConfig.models.providers[providerId].models[existingModelIndex].name = config.model
+    } else {
+      openclawConfig.models.providers[providerId].models.push({
+        id: config.model,
+        name: config.model,
+        reasoning: false,
+        input: ['text'],
+        cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+        contextWindow: 128000,
+        maxTokens: 4096
+      })
+    }
+
+    openclawConfig.agents = openclawConfig.agents || {}
+    openclawConfig.agents.defaults = openclawConfig.agents.defaults || {}
+    openclawConfig.agents.defaults.model = `${providerId}/${config.model}`
+
+    fs.writeFileSync(openclawConfigPath, JSON.stringify(openclawConfig, null, 2))
+
+    if (config.apiKey) {
+      const envVarName = `${providerId.toUpperCase()}_API_KEY`
+      process.env[envVarName] = config.apiKey
+    }
+
+    event.reply('model-config-applied', { success: true })
+  } catch (error) {
+    event.reply('model-config-applied', { success: false, error: error.message })
   }
 })
 

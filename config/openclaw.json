@@ -4,36 +4,21 @@
     "controlUi": {
       "allowInsecureAuth": true
     },
-    "bind": "loopback",
-    "mode": "local",
-    "auth": {
-      "mode": "token",
-      "token": "d561c16be4c8f2a273e9c7ca4a8f684ee17626e8e90dbffb"
-    },
-    "tailscale": {
-      "mode": "off",
-      "resetOnExit": false
-    }
+    "bind": "loopback"
   },
-  "agents": {
-    "defaults": {
-      "workspace": "C:\\Users\\Administrator\\.openclaw\\workspace"
-    }
+  "models": {
+    "provider": "openai",
+    "apiBase": "https://api.deepseek.com/v1",
+    "model": "deepseek-chat"
   },
-  "session": {
-    "dmScope": "per-channel-peer"
+  "skills": {
+    "enabled": true
   },
-  "tools": {
-    "profile": "coding"
-  },
-  "wizard": {
-    "lastRunAt": "2026-05-12T02:25:01.674Z",
-    "lastRunVersion": "2026.5.7",
-    "lastRunCommand": "onboard",
-    "lastRunMode": "local"
-  },
-  "meta": {
-    "lastTouchedVersion": "2026.5.7",
-    "lastTouchedAt": "2026-05-12T02:25:01.809Z"
+  "paths": {
+    "stateDir": "./config",
+    "canvasDir": "./config/canvas",
+    "credentialsDir": "./config/credentials",
+    "sessionsDir": "./config/sessions",
+    "logsDir": "./config/logs"
   }
 }

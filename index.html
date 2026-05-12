@@ -736,53 +736,64 @@
 
     <div class="bottom-actions">
       <button class="btn-large btn-danger" id="stop-btn" disabled>
-        <span style="font-size: 16px;">&#x25FC;</span> 停止
+        <span style="font-size: 16px;">&#x25FC;</span> 
       </button>
       <button class="btn-large btn-primary" id="start-btn">
-        <span style="font-size: 16px;">&#x25B6;</span> 启动服务
+        <span style="font-size: 16px;">&#x25B6;</span> 
       </button>
       <button class="btn-large btn-warning" id="restore-btn">
-        <span style="font-size: 16px;">&#x27F3;</span> 一键恢复
+        <span style="font-size: 16px;">&#x27F3;</span> 
       </button>
       <button class="btn-large btn-text" id="api-btn">
-        修改 API Key
+     API Key
       </button>
       <button class="btn-large btn-info" id="license-btn">
-        授权信息
+          秘钥
       </button>
       <button class="btn-large btn-primary" id="dashboard-btn" disabled>
-        <span style="font-size: 16px;">&#x1F517;</span> 网页端控制
+        <span style="font-size: 16px;">&#x1F517;</span> 
       </button>
       <button class="btn-large btn-warning" id="setup-btn">
-        <span style="font-size: 16px;">&#x1F6E0;</span> 一键初始化
+        <span style="font-size: 16px;">&#x1F6E0;</span> 
       </button>
     </div>
   </div>
 
   <div class="modal-overlay" id="api-modal">
-    <div class="modal">
+    <div class="modal" style="width: 500px;">
       <div class="modal-header">
-        <span class="modal-title">修改 API Key</span>
+        <span class="modal-title">自定义配置</span>
         <button class="modal-close" id="api-modal-close">&#x00D7;</button>
       </div>
-      <div class="success-message" id="api-success">API Key 保存成功！</div>
-      <div class="error-message" id="api-error">请输入有效的 API Key</div>
+      <div class="success-message" id="api-success">配置保存成功！</div>
+      <div class="error-message" id="api-error">请检查输入项</div>
       <div class="form-group">
         <label class="form-label">API Key</label>
         <input type="password" class="form-input" id="api-key-input" placeholder="请输入您的 API Key">
       </div>
       <div class="form-group">
-        <label class="form-label">模型选择</label>
-        <select class="form-input" id="model-select">
-          <option value="deepseek">DeepSeek Chat</option>
-          <option value="gpt4">GPT-4</option>
-          <option value="claude">Claude 3</option>
-          <option value="gemini">Gemini</option>
+        <label class="form-label">模型提供者</label>
+        <select class="form-input" id="provider-select">
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">模型 ID</label>
+        <input type="text" class="form-input" id="model-input" placeholder="如: gpt-4o, claude-opus-4-6, kimi-k2.5">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API 地址</label>
+        <input type="text" class="form-input" id="provider-url-input" placeholder="如：https://api.deepseek.com/v1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">API 协议</label>
+        <select class="form-input" id="api-type-select">
+          <option value="openai-completions">OpenAI 兼容</option>
+          <option value="anthropic-messages">Anthropic 兼容</option>
         </select>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="api-cancel">取消</button>
-        <button class="btn btn-success" id="api-save">保存</button>
+        <button class="btn btn-success" id="api-save">保存配置</button>
       </div>
     </div>
   </div>
@@ -846,6 +857,40 @@
 
     let startTime = null
     let uptimeInterval = null
+
+    const PROVIDER_CONFIG = {
+      deepseek: { url: 'https://api.deepseek.com/v1', api: 'openai-completions' },
+      openai: { url: 'https://api.openai.com/v1', api: 'openai-completions' },
+      anthropic: { url: 'https://api.anthropic.com/v1', api: 'anthropic-messages' },
+      moonshot: { url: 'https://api.moonshot.cn/v1', api: 'openai-completions' },
+      minimax: { url: 'https://api.minimax.com/v1', api: 'anthropic-messages' },
+      custom: { url: 'https://api.example.com/v1', api: 'openai-completions' }
+    }
+
+    const PROVIDER_LABELS = {
+      deepseek: 'DeepSeek',
+      openai: 'OpenAI',
+      anthropic: 'Anthropic',
+      moonshot: 'Moonshot (Kimi)',
+      minimax: 'MiniMax',
+      custom: 'Custom (自定义)'
+    }
+
+    function updateProviderUrl(providerId) {
+      const config = PROVIDER_CONFIG[providerId]
+      if (config) {
+        document.getElementById('provider-url-input').value = config.url
+        document.getElementById('api-type-select').value = config.api
+      }
+    }
+
+    function initProviderSelect() {
+      const providerSelect = document.getElementById('provider-select')
+      const options = Object.keys(PROVIDER_CONFIG).map(key => 
+        `<option value="${key}">${PROVIDER_LABELS[key] || key.toUpperCase()}</option>`
+      ).join('')
+      providerSelect.innerHTML = options
+    }
 
     function showToast(message, type = 'info') {
       toast.textContent = message
@@ -974,7 +1019,7 @@
     })
 
     document.getElementById('api-btn').addEventListener('click', () => {
-      ipcRenderer.send('get-api-key')
+      ipcRenderer.send('get-all-config')
       apiModal.classList.add('show')
     })
 
@@ -986,26 +1031,60 @@
       apiModal.classList.remove('show')
     })
 
+    document.getElementById('provider-select').addEventListener('change', (e) => {
+      updateProviderUrl(e.target.value)
+    })
+
     ipcRenderer.on('api-key', (event, apiKey) => {
       document.getElementById('api-key-input').value = apiKey
     })
 
     document.getElementById('api-save').addEventListener('click', () => {
       const apiKey = document.getElementById('api-key-input').value
-      if (!apiKey.trim()) {
+      const provider = document.getElementById('provider-select').value
+      const model = document.getElementById('model-input').value
+      const providerUrl = document.getElementById('provider-url-input').value
+      const apiType = document.getElementById('api-type-select').value
+
+      if (!model.trim()) {
         document.getElementById('api-error').classList.add('show')
         setTimeout(() => {
           document.getElementById('api-error').classList.remove('show')
         }, 3000)
         return
       }
+
+      if (!apiKey.trim() && provider !== 'ollama') {
+        document.getElementById('api-error').classList.add('show')
+        setTimeout(() => {
+          document.getElementById('api-error').classList.remove('show')
+        }, 3000)
+        return
+      }
+
       document.getElementById('api-success').classList.add('show')
-      ipcRenderer.send('set-api-key', apiKey)
+      
+      ipcRenderer.send('apply-model-config', {
+        provider,
+        model: model.trim(),
+        apiKey: apiKey.trim(),
+        baseUrl: providerUrl.trim(),
+        api: apiType
+      })
+
       setTimeout(() => {
         document.getElementById('api-success').classList.remove('show')
         apiModal.classList.remove('show')
       }, 1500)
-      showToast('API Key 保存成功！', 'success')
+      showToast('配置保存成功！', 'success')
+    })
+
+    ipcRenderer.on('model-config-applied', (event, result) => {
+      if (result.success) {
+        addLog('[INFO] 模型配置已更新')
+      } else {
+        showToast(`配置失败: ${result.error}`, 'error')
+      }
     })
 
     document.getElementById('license-btn').addEventListener('click', () => {
@@ -1098,12 +1177,13 @@
         addLog('[SUCCESS] 一键初始化完成')
         showToast('一键初始化完成', 'success')
       } else {
-        addLog(`[ERROR] 初始化失败: ${result.error}`)
-        showToast(`初始化失败: ${result.error}`, 'error')
+        addLog(`[ERROR] 初始化失败：${result.error}`)
+        showToast(`初始化失败：${result.error}`, 'error')
       }
     })
 
-    addLog('[INFO] OpenClaw U盘版 v1.1.1 已启动')
+    initProviderSelect()
+    addLog('[INFO] OpenClaw U 盘版 v1.1.1 已启动')
   </script>
 </body>
 </html>
