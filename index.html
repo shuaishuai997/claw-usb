@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw U盘版</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .title-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 40px;
+      background: linear-gradient(90deg, #2d2d44 0%, #1a1a2e 100%);
+      padding: 0 15px;
+      -webkit-app-region: drag;
+      border-bottom: 1px solid #3a3a5c;
+    }
+
+    .title-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      width: 24px;
+      height: 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+
+    .title-bar-right {
+      display: flex;
+      gap: 5px;
+      -webkit-app-region: no-drag;
+    }
+
+    .title-btn {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      transition: all 0.2s;
+    }
+
+    .title-btn:hover {
+      background: #3a3a5c;
+      color: #fff;
+    }
+
+    .title-btn.close:hover {
+      background: #e74c3c;
+      color: #fff;
+    }
+
+    .main-content {
+      padding: 20px;
+      height: calc(100vh - 40px);
+      overflow-y: auto;
+    }
+
+    .header-section {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .header-logo {
+      width: 60px;
+      height: 60px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 15px;
+      margin: 0 auto 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+
+    .header-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 5px;
+    }
+
+    .header-subtitle {
+      font-size: 12px;
+      color: #888;
+    }
+
+    .status-card {
+      background: linear-gradient(135deg, #2d2d44 0%, #1e1e32 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border: 1px solid #3a3a5c;
+      transition: all 0.3s;
+    }
+
+    .status-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .status-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.running {
+      background: #10b981;
+    }
+
+    .status-dot.stopped {
+      background: #666;
+      animation: none;
+    }
+
+    .status-dot.starting {
+      background: #f59e0b;
+      animation: pulse 0.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .status-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .status-title.running {
+      color: #10b981;
+    }
+
+    .status-title.stopped {
+      color: #666;
+    }
+
+    .status-title.starting {
+      color: #f59e0b;
+    }
+
+    .status-desc {
+      font-size: 12px;
+      color: #888;
+      margin-left: 24px;
+    }
+
+    .status-meta {
+      display: flex;
+      gap: 20px;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid #3a3a5c;
+      margin-left: 24px;
+    }
+
+    .meta-item {
+      font-size: 12px;
+      color: #666;
+    }
+
+    .meta-item span {
+      color: #e0e0e0;
+      margin-left: 5px;
+    }
+
+    .grid-section {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .grid-card {
+      background: linear-gradient(135deg, #2d2d44 0%, #1e1e32 100%);
+      border-radius: 12px;
+      padding: 18px;
+      border: 1px solid #3a3a5c;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .grid-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-value {
+      font-size: 15px;
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 12px;
+    }
+
+    .card-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .status-badge.success {
+      color: #10b981;
+    }
+
+    .status-badge.warning {
+      color: #f59e0b;
+    }
+
+    .status-badge.error {
+      color: #ef4444;
+    }
+
+    .status-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+    }
+
+    .status-icon.success {
+      background: #10b981;
+    }
+
+    .status-icon.warning {
+      background: #f59e0b;
+    }
+
+    .status-icon.error {
+      background: #ef4444;
+    }
+
+    .btn-outline {
+      padding: 6px 14px;
+      border: 1px solid #3a3a5c;
+      border-radius: 6px;
+      background: transparent;
+      color: #888;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-outline:hover {
+      border-color: #667eea;
+      color: #667eea;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-success:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: #3a3a5c;
+      color: #e0e0e0;
+    }
+
+    .btn-secondary:hover {
+      background: #4a4a7c;
+    }
+
+    .logs-section {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 20px;
+      border: 1px solid #3a3a5c;
+    }
+
+    .logs-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .logs-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+
+    .logs-clear {
+      font-size: 12px;
+      color: #667eea;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+
+    .logs-clear:hover {
+      color: #818cf8;
+    }
+
+    .logs-content {
+      background: #0d0d1a;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 11px;
+      color: #888;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.6;
+    }
+
+    .logs-content::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .logs-content::-webkit-scrollbar-track {
+      background: #1a1a2e;
+      border-radius: 3px;
+    }
+
+    .logs-content::-webkit-scrollbar-thumb {
+      background: #3a3a5c;
+      border-radius: 3px;
+    }
+
+    .bottom-actions {
+      display: flex;
+      gap: 15px;
+    }
+
+    .btn-large {
+      padding: 12px 28px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-large:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #fff;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #fff;
+    }
+
+    .btn-warning:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-info {
+      background: #3a3a5c;
+      color: #e0e0e0;
+      margin-left: auto;
+    }
+
+    .btn-info:hover {
+      background: #4a4a7c;
+    }
+
+    .btn-text {
+      background: transparent;
+      color: #667eea;
+      border: 1px solid #667eea;
+    }
+
+    .btn-text:hover {
+      background: rgba(102, 126, 234, 0.1);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #2d2d44 0%, #1e1e32 100%);
+      border-radius: 12px;
+      padding: 24px;
+      width: 90%;
+      max-width: 450px;
+      border: 1px solid #3a3a5c;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: #3a3a5c;
+      color: #fff;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 8px;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid #3a3a5c;
+      border-radius: 8px;
+      background: #1a1a2e;
+      color: #fff;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .license-info {
+      background: #1a1a2e;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+
+    .license-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #3a3a5c;
+    }
+
+    .license-row:last-child {
+      border-bottom: none;
+    }
+
+    .license-label {
+      color: #888;
+      font-size: 13px;
+    }
+
+    .license-value {
+      color: #e0e0e0;
+      font-size: 13px;
+    }
+
+    .license-value.active {
+      color: #10b981;
+    }
+
+    .license-value.inactive {
+      color: #ef4444;
+    }
+
+    .feature-list {
+      list-style: none;
+      padding: 0;
+      margin-top: 10px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 0;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .feature-item::before {
+      content: '✓';
+      color: #10b981;
+    }
+
+    .success-message {
+      display: none;
+      padding: 12px;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid #10b981;
+      border-radius: 8px;
+      color: #10b981;
+      font-size: 13px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .success-message.show {
+      display: block;
+    }
+
+    .error-message {
+      display: none;
+      padding: 12px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid #ef4444;
+      border-radius: 8px;
+      color: #ef4444;
+      font-size: 13px;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .error-message.show {
+      display: block;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 13px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      opacity: 1;
+    }
+
+    .toast.success {
+      background: rgba(16, 185, 129, 0.9);
+    }
+
+    .toast.error {
+      background: rgba(239, 68, 68, 0.9);
+    }
+
+    @media (max-width: 768px) {
+      .grid-section {
+        grid-template-columns: 1fr;
+      }
+      
+      .bottom-actions {
+        flex-wrap: wrap;
+      }
+      
+      .btn-large {
+        flex: 1;
+        min-width: 120px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="title-bar">
+    <div class="title-bar-left">
+      <div class="logo">O</div>
+      <span class="title">OpenClaw U盘版 v1.1.1</span>
+    </div>
+    <div class="title-bar-right">
+      <button class="title-btn" id="min-btn">
+        <span style="font-size: 16px;">&#x2013;</span>
+      </button>
+      <button class="title-btn close" id="close-btn">
+        <span style="font-size: 14px;">&#x00D7;</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="main-content">
+    <div class="header-section">
+      <div class="header-logo">O</div>
+      <div class="header-title">OpenClaw U盘版</div>
+      <div class="header-subtitle">您的 AI 助手 · 数据安全 U盘 · 拔出即停止</div>
+    </div>
+
+    <div class="status-card" id="status-card">
+      <div class="status-header">
+        <div class="status-dot stopped" id="status-dot"></div>
+        <span class="status-title stopped" id="status-title">OpenClaw 已停止</span>
+      </div>
+      <div class="status-desc" id="status-desc">点击启动按钮开始服务</div>
+      <div class="status-meta" id="status-meta">
+        <div class="meta-item">PID: <span id="pid-value">-</span></div>
+        <div class="meta-item">端口: <span id="port-value">-</span></div>
+        <div class="meta-item">运行时间: <span id="uptime-value">-</span></div>
+      </div>
+    </div>
+
+    
+
+    <div class="logs-section">
+      <div class="logs-header">
+        <span class="logs-title">运行日志</span>
+        <span class="logs-clear" id="clear-logs">清空</span>
+      </div>
+      <div class="logs-content" id="logs-content"></div>
+    </div>
+
+    <div class="bottom-actions">
+      <button class="btn-large btn-danger" id="stop-btn" disabled>
+        <span style="font-size: 16px;">&#x25FC;</span> 停止
+      </button>
+      <button class="btn-large btn-primary" id="start-btn">
+        <span style="font-size: 16px;">&#x25B6;</span> 启动服务
+      </button>
+      <button class="btn-large btn-warning" id="restore-btn">
+        <span style="font-size: 16px;">&#x27F3;</span> 一键恢复
+      </button>
+      <button class="btn-large btn-text" id="api-btn">
+        修改 API Key
+      </button>
+      <button class="btn-large btn-info" id="license-btn">
+        授权信息
+      </button>
+      <button class="btn-large btn-primary" id="dashboard-btn" disabled>
+        <span style="font-size: 16px;">&#x1F517;</span> 网页端控制
+      </button>
+      <button class="btn-large btn-warning" id="setup-btn">
+        <span style="font-size: 16px;">&#x1F6E0;</span> 一键初始化
+      </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="api-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">修改 API Key</span>
+        <button class="modal-close" id="api-modal-close">&#x00D7;</button>
+      </div>
+      <div class="success-message" id="api-success">API Key 保存成功！</div>
+      <div class="error-message" id="api-error">请输入有效的 API Key</div>
+      <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="api-key-input" placeholder="请输入您的 API Key">
+      </div>
+      <div class="form-group">
+        <label class="form-label">模型选择</label>
+        <select class="form-input" id="model-select">
+          <option value="deepseek">DeepSeek Chat</option>
+          <option value="gpt4">GPT-4</option>
+          <option value="claude">Claude 3</option>
+          <option value="gemini">Gemini</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="api-cancel">取消</button>
+        <button class="btn btn-success" id="api-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="license-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title">授权信息</span>
+        <button class="modal-close" id="license-modal-close">&#x00D7;</button>
+      </div>
+      <div class="success-message" id="license-success">授权激活成功！</div>
+      <div class="error-message" id="license-error">请输入有效的授权码</div>
+      <div class="license-info" id="license-info">
+        <div class="license-row">
+          <span class="license-label">授权状态</span>
+          <span class="license-value inactive" id="license-status">未激活</span>
+        </div>
+        <div class="license-row">
+          <span class="license-label">授权密钥</span>
+          <span class="license-value">******</span>
+        </div>
+        <div class="license-row">
+          <span class="license-label">到期时间</span>
+          <span class="license-value" id="license-expires">未设置</span>
+        </div>
+        <div class="license-row">
+          <span class="license-label">授权功能</span>
+          <div class="feature-list" id="feature-list">
+            <li class="feature-item">微信接入</li>
+            <li class="feature-item">API 调用</li>
+            <li class="feature-item">一键恢复</li>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">输入授权码激活</label>
+        <input type="text" class="form-input" id="license-key-input" placeholder="请输入授权码">
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="license-cancel">取消</button>
+        <button class="btn btn-success" id="license-activate">激活</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const { ipcRenderer } = require('electron')
+
+    const statusDot = document.getElementById('status-dot')
+    const statusTitle = document.getElementById('status-title')
+    const statusDesc = document.getElementById('status-desc')
+    const logsContent = document.getElementById('logs-content')
+    const startBtn = document.getElementById('start-btn')
+    const stopBtn = document.getElementById('stop-btn')
+    const apiModal = document.getElementById('api-modal')
+    const licenseModal = document.getElementById('license-modal')
+    const toast = document.getElementById('toast')
+    const dashboardBtn = document.getElementById('dashboard-btn')
+
+    let startTime = null
+    let uptimeInterval = null
+
+    function showToast(message, type = 'info') {
+      toast.textContent = message
+      toast.className = `toast ${type} show`
+      setTimeout(() => {
+        toast.classList.remove('show')
+      }, 3000)
+    }
+
+    document.getElementById('min-btn').addEventListener('click', () => {
+      ipcRenderer.send('minimize-window')
+    })
+
+    document.getElementById('close-btn').addEventListener('click', () => {
+      ipcRenderer.send('hide-window')
+    })
+
+    document.getElementById('clear-logs').addEventListener('click', () => {
+      logsContent.textContent = ''
+      addLog('[INFO] 日志已清空')
+    })
+
+    function addLog(message) {
+      if (logsContent.textContent) {
+        logsContent.textContent += '\n'
+      }
+      logsContent.textContent += message
+      logsContent.scrollTop = logsContent.scrollHeight
+    }
+
+    function updateStatus(isRunning, isStarting = false) {
+      if (isStarting) {
+        statusDot.className = 'status-dot starting'
+        statusTitle.className = 'status-title starting'
+        statusTitle.textContent = 'OpenClaw 启动中...'
+        statusDesc.textContent = '正在初始化服务，请稍候...'
+      } else if (isRunning) {
+        statusDot.className = 'status-dot running'
+        statusTitle.className = 'status-title running'
+        statusTitle.textContent = 'OpenClaw 运行中'
+        statusDesc.textContent = '已就绪，可在聊天工具中开始使用'
+        startTime = Date.now()
+        startUptimeCounter()
+      } else {
+        statusDot.className = 'status-dot stopped'
+        statusTitle.className = 'status-title stopped'
+        statusTitle.textContent = 'OpenClaw 已停止'
+        statusDesc.textContent = '点击启动按钮开始服务'
+        stopUptimeCounter()
+        document.getElementById('pid-value').textContent = '-'
+        document.getElementById('port-value').textContent = '-'
+        document.getElementById('uptime-value').textContent = '-'
+      }
+      startBtn.disabled = isRunning || isStarting
+      stopBtn.disabled = !isRunning
+      dashboardBtn.disabled = !isRunning
+    }
+
+    function startUptimeCounter() {
+      stopUptimeCounter()
+      uptimeInterval = setInterval(() => {
+        const elapsed = Date.now() - startTime
+        const hours = Math.floor(elapsed / 3600000)
+        const minutes = Math.floor((elapsed % 3600000) / 60000)
+        const seconds = Math.floor((elapsed % 60000) / 1000)
+        document.getElementById('uptime-value').textContent = 
+          `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+      }, 1000)
+    }
+
+    function stopUptimeCounter() {
+      if (uptimeInterval) {
+        clearInterval(uptimeInterval)
+        uptimeInterval = null
+      }
+    }
+
+    ipcRenderer.send('get-service-status')
+
+    ipcRenderer.on('log-update', (event, message) => {
+      addLog(message)
+      
+      const portMatch = message.match(/port (\d+)/i)
+      if (portMatch && document.getElementById('port-value').textContent === '-') {
+        document.getElementById('port-value').textContent = portMatch[1]
+      }
+    })
+
+    ipcRenderer.on('service-status', (event, status) => {
+      updateStatus(status.isRunning)
+      if (status.pid) {
+        document.getElementById('pid-value').textContent = status.pid
+      }
+      if (status.port) {
+        document.getElementById('port-value').textContent = status.port
+      }
+    })
+
+    startBtn.addEventListener('click', async () => {
+      updateStatus(false, true)
+      addLog('[INFO] 正在启动 OpenClaw 服务...')
+      ipcRenderer.send('start-service')
+    })
+
+    ipcRenderer.on('service-started', (event, data) => {
+      updateStatus(true)
+      document.getElementById('pid-value').textContent = data.pid
+      document.getElementById('port-value').textContent = data.port || '3000'
+      showToast('OpenClaw 服务启动成功！', 'success')
+    })
+
+    ipcRenderer.on('service-error', (event, error) => {
+      updateStatus(false)
+      addLog(`[ERROR] ${error}`)
+      showToast(`启动失败: ${error}`, 'error')
+    })
+
+    stopBtn.addEventListener('click', async () => {
+      addLog('[INFO] 正在停止 OpenClaw 服务...')
+      ipcRenderer.send('stop-service')
+    })
+
+    ipcRenderer.on('service-stopped', () => {
+      updateStatus(false)
+      showToast('OpenClaw 服务已停止', 'info')
+    })
+
+    document.getElementById('api-btn').addEventListener('click', () => {
+      ipcRenderer.send('get-api-key')
+      apiModal.classList.add('show')
+    })
+
+    document.getElementById('api-modal-close').addEventListener('click', () => {
+      apiModal.classList.remove('show')
+    })
+
+    document.getElementById('api-cancel').addEventListener('click', () => {
+      apiModal.classList.remove('show')
+    })
+
+    ipcRenderer.on('api-key', (event, apiKey) => {
+      document.getElementById('api-key-input').value = apiKey
+    })
+
+    document.getElementById('api-save').addEventListener('click', () => {
+      const apiKey = document.getElementById('api-key-input').value
+      if (!apiKey.trim()) {
+        document.getElementById('api-error').classList.add('show')
+        setTimeout(() => {
+          document.getElementById('api-error').classList.remove('show')
+        }, 3000)
+        return
+      }
+      document.getElementById('api-success').classList.add('show')
+      ipcRenderer.send('set-api-key', apiKey)
+      setTimeout(() => {
+        document.getElementById('api-success').classList.remove('show')
+        apiModal.classList.remove('show')
+      }, 1500)
+      showToast('API Key 保存成功！', 'success')
+    })
+
+    document.getElementById('license-btn').addEventListener('click', () => {
+      ipcRenderer.send('get-license')
+      licenseModal.classList.add('show')
+    })
+
+    document.getElementById('license-modal-close').addEventListener('click', () => {
+      licenseModal.classList.remove('show')
+    })
+
+    document.getElementById('license-cancel').addEventListener('click', () => {
+      licenseModal.classList.remove('show')
+    })
+
+    ipcRenderer.on('license', (event, license) => {
+      const statusEl = document.getElementById('license-status')
+      const expiresEl = document.getElementById('license-expires')
+      if (license.activated) {
+        statusEl.className = 'license-value active'
+        statusEl.textContent = '已激活'
+        expiresEl.textContent = license.expires || '永久'
+      } else {
+        statusEl.className = 'license-value inactive'
+        statusEl.textContent = '未激活'
+        expiresEl.textContent = '未设置'
+      }
+    })
+
+    document.getElementById('license-activate').addEventListener('click', () => {
+      const key = document.getElementById('license-key-input').value
+      if (!key.trim()) {
+        document.getElementById('license-error').classList.add('show')
+        setTimeout(() => {
+          document.getElementById('license-error').classList.remove('show')
+        }, 3000)
+        return
+      }
+      ipcRenderer.send('activate-license', key)
+    })
+
+    ipcRenderer.on('license-activated', (event, success) => {
+      if (success) {
+        const successMsg = document.getElementById('license-success')
+        successMsg.classList.add('show')
+        ipcRenderer.send('get-license')
+        setTimeout(() => {
+          successMsg.classList.remove('show')
+        }, 2000)
+        showToast('授权激活成功！', 'success')
+      }
+    })
+
+    document.getElementById('restore-btn').addEventListener('click', () => {
+      if (confirm('确定要恢复默认设置吗？这将清除所有配置。')) {
+        addLog('[INFO] 正在执行一键恢复...')
+        ipcRenderer.send('restore-defaults')
+      }
+    })
+
+    ipcRenderer.on('restore-complete', (event, success) => {
+      if (success) {
+        addLog('[SUCCESS] 一键恢复完成')
+        showToast('一键恢复完成！', 'success')
+      }
+    })
+
+    document.getElementById('dashboard-btn').addEventListener('click', () => {
+      addLog('[INFO] 正在打开网页端控制面板...')
+      ipcRenderer.send('open-dashboard')
+    })
+
+    ipcRenderer.on('dashboard-opened', (event, result) => {
+      if (result.success) {
+        addLog('[SUCCESS] 网页端控制面板已打开')
+        showToast('网页端控制面板已打开', 'success')
+      } else {
+        addLog(`[ERROR] 打开控制面板失败: ${result.error}`)
+        showToast(`打开失败: ${result.error}`, 'error')
+      }
+    })
+
+    document.getElementById('setup-btn').addEventListener('click', () => {
+      addLog('[INFO] 正在执行一键初始化...')
+      ipcRenderer.send('setup')
+    })
+
+    ipcRenderer.on('setup-completed', (event, result) => {
+      if (result.success) {
+        addLog('[SUCCESS] 一键初始化完成')
+        showToast('一键初始化完成', 'success')
+      } else {
+        addLog(`[ERROR] 初始化失败: ${result.error}`)
+        showToast(`初始化失败: ${result.error}`, 'error')
+      }
+    })
+
+    addLog('[INFO] OpenClaw U盘版 v1.1.1 已启动')
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "entries": {
+    "I:\\code\\electron\\claw-usb\\config\\openclaw.json": {
+      "lastKnownGood": {
+        "hash": "cac3eb13e0a17f6191548a21e849008eb2c2ae1831cfb2375e6fd7c552f9be87",
+        "bytes": 796,
+        "mtimeMs": 1778552701811.485,
+        "ctimeMs": 1778552701812.9944,
+        "dev": "4266729034",
+        "ino": "3659174697670022",
+        "mode": 438,
+        "nlink": 1,
+        "uid": 0,
+        "gid": 0,
+        "hasMeta": true,
+        "gatewayMode": "local",
+        "observedAt": "2026-05-12T02:25:01.884Z"
+      },
+      "lastObservedSuspiciousSignature": null
+    }
+  }
+}

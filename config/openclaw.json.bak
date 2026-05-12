@@ -1,0 +1,39 @@
+{
+  "gateway": {
+    "port": 18789,
+    "controlUi": {
+      "allowInsecureAuth": true
+    },
+    "bind": "loopback",
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "d561c16be4c8f2a273e9c7ca4a8f684ee17626e8e90dbffb"
+    },
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "C:\\Users\\Administrator\\.openclaw\\workspace"
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "coding"
+  },
+  "wizard": {
+    "lastRunAt": "2026-05-12T02:24:27.625Z",
+    "lastRunVersion": "2026.5.7",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.5.7",
+    "lastTouchedAt": "2026-05-12T02:24:27.843Z"
+  }
+}
