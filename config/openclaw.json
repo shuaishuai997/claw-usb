@@ -1,54 +1,36 @@
 {
-  "gateway": {
-    "port": 18789,
-    "controlUi": {
-      "allowInsecureAuth": true
-    },
-    "bind": "loopback"
-  },
-  "models": {
-    "provider": "openai",
-    "apiBase": "https://api.deepseek.com/v1",
-    "model": "deepseek-chat",
-    "providers": {
-      "custom": {
-        "api": "openai-completions",
-        "baseUrl": "https://api.devhub.asia/v1",
-        "apiKey": "sk-5sCURwsDM7QP6zhWf1WguAMfR1TO59GX6DIr8KmfT7bcSMM6",
-        "models": [
-          {
-            "id": "gpt-5.4",
-            "name": "gpt-5.4",
-            "reasoning": false,
-            "input": [
-              "text"
-            ],
-            "cost": {
-              "input": 0,
-              "output": 0,
-              "cacheRead": 0,
-              "cacheWrite": 0
-            },
-            "contextWindow": 128000,
-            "maxTokens": 4096
-          }
-        ]
-      }
-    }
-  },
-  "skills": {
-    "enabled": true
-  },
-  "paths": {
-    "stateDir": "./config",
-    "canvasDir": "./config/canvas",
-    "credentialsDir": "./config/credentials",
-    "sessionsDir": "./config/sessions",
-    "logsDir": "./config/logs"
-  },
   "agents": {
     "defaults": {
-      "model": "custom/gpt-5.4"
+      "workspace": "C:\\Users\\Administrator\\.openclaw\\workspace"
     }
+  },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "f0169783f3ba69ed0c269f172bb37ec01bd5ea23a8f10889"
+    },
+    "port": 18789,
+    "bind": "loopback",
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "tools": {
+    "profile": "coding"
+  },
+  "wizard": {
+    "lastRunAt": "2026-05-12T11:19:35.823Z",
+    "lastRunVersion": "2026.5.7",
+    "lastRunCommand": "onboard",
+    "lastRunMode": "local"
+  },
+  "meta": {
+    "lastTouchedVersion": "2026.5.7",
+    "lastTouchedAt": "2026-05-12T11:19:35.831Z"
   }
 }

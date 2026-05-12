@@ -2,36 +2,54 @@
   "entries": {
     "I:\\code\\electron\\claw-usb\\config\\openclaw.json": {
       "lastKnownGood": {
-        "hash": "cac3eb13e0a17f6191548a21e849008eb2c2ae1831cfb2375e6fd7c552f9be87",
-        "bytes": 796,
-        "mtimeMs": 1778552701811.485,
-        "ctimeMs": 1778552701812.9944,
-        "dev": "4266729034",
-        "ino": "3659174697670022",
+        "hash": "7c8dca4672f07953368db1437550064b9ebdbdaa4e9cf7bd99bcf73331a777c2",
+        "bytes": 738,
+        "mtimeMs": 1778584775834.4236,
+        "ctimeMs": 1778584775835.425,
+        "dev": "0",
+        "ino": "10133099162025688",
         "mode": 438,
         "nlink": 1,
         "uid": 0,
         "gid": 0,
         "hasMeta": true,
         "gatewayMode": "local",
-        "observedAt": "2026-05-12T02:31:45.525Z"
+        "observedAt": "2026-05-12T11:19:46.875Z"
       },
       "lastObservedSuspiciousSignature": null,
       "lastPromotedGood": {
-        "hash": "cac3eb13e0a17f6191548a21e849008eb2c2ae1831cfb2375e6fd7c552f9be87",
-        "bytes": 796,
-        "mtimeMs": 1778552701811.485,
-        "ctimeMs": 1778552701812.9944,
-        "dev": "4266729034",
-        "ino": "3659174697670022",
+        "hash": "7c8dca4672f07953368db1437550064b9ebdbdaa4e9cf7bd99bcf73331a777c2",
+        "bytes": 738,
+        "mtimeMs": 1778584775834.4236,
+        "ctimeMs": 1778584775835.425,
+        "dev": "0",
+        "ino": "10133099162025688",
         "mode": 33206,
         "nlink": 1,
         "uid": 0,
         "gid": 0,
         "hasMeta": true,
         "gatewayMode": "local",
-        "observedAt": "2026-05-12T02:31:37.315Z"
+        "observedAt": "2026-05-12T11:19:43.667Z"
       }
+    },
+    "C:\\Users\\Administrator\\.qclaw\\openclaw.json": {
+      "lastKnownGood": {
+        "hash": "fbc95f9ff8b87f2a371d1fbd175378bedc16465928fd66ad97fb34238ab9c1e8",
+        "bytes": 8658,
+        "mtimeMs": 1778584415425.6687,
+        "ctimeMs": 1778584415429.2166,
+        "dev": "0",
+        "ino": "1407374884801801",
+        "mode": 438,
+        "nlink": 1,
+        "uid": 0,
+        "gid": 0,
+        "hasMeta": true,
+        "gatewayMode": "local",
+        "observedAt": "2026-05-12T11:13:35.511Z"
+      },
+      "lastObservedSuspiciousSignature": null
     }
   }
 }

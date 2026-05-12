@@ -13,18 +13,32 @@ class ServiceManager {
   }
 
   getResourcesPath() {
-    // if (process.resourcesPath) {
-    //   return process.resourcesPath;
-    // }
+    if (process.resourcesPath) {
+      return process.resourcesPath;
+    }
     return path.join(__dirname, '../resources');
   }
 
+  getConfigDir() {
+    // 配置文件目录：项目根目录下的 config/
+    return path.join(this.getResourcesPath(), '..', 'config');
+  }
+
   getNodePath() {
-    return path.join(this.getResourcesPath(), '/node/node.exe');
+    // 用系统 node
+    return 'node';
   }
 
   getOpenclawPath() {
     return path.join(this.getResourcesPath(), '/openclaw/openclaw.mjs');
+  }
+
+  getEnv() {
+    return {
+      ...process.env,
+      NODE_ENV: 'production',
+      OPENCLAW_STATE_DIR: this.getConfigDir()
+    };
   }
 
   setLogCallback(callback) {
@@ -52,213 +66,171 @@ class ServiceManager {
     console.log(logMessage);
   }
 
-  start() {
-    return new Promise((resolve, reject) => {
-      if (this.isRunning) {
-        reject(new Error('服务已在运行中'));
-        return;
-      }
+  async start() {
+    if (this.isRunning) {
+      throw new Error('服务已经在运行中');
+    }
 
+    return new Promise((resolve, reject) => {
       this.log('正在启动 OpenClaw 服务...');
 
-      const args = [this.getOpenclawPath(), 'gateway', 'run'];
-      
+      const args = [
+        this.getOpenclawPath(),
+        'gateway',
+        'run',
+        '--port', '18789'
+      ];
+
       this.log(`启动命令: ${this.getNodePath()} ${args.join(' ')}`);
 
       this.process = spawn(this.getNodePath(), args, {
         cwd: path.dirname(this.getOpenclawPath()),
-        env: {
-          ...process.env,
-          NODE_ENV: 'production'
-        }
+        env: this.getEnv(),
+        detached: true,
+        stdio: ['ignore', 'pipe', 'pipe']
       });
 
-      this.process.on('error', (err) => {
-        this.log(`服务启动失败: ${err.message}`, 'error');
-        this.isRunning = false;
-        this.process = null;
-        if (this.errorCallback) {
-          this.errorCallback(err.message);
-        }
-        reject(err);
-      });
+      this.process.unref();
 
-      this.process.on('exit', (code) => {
-        if (this.isRunning) {
-          this.log(`服务异常退出，退出码: ${code}`, 'error');
-          this.isRunning = false;
-          this.process = null;
-          if (this.errorCallback) {
-            this.errorCallback(`服务异常退出，退出码: ${code}`);
-          }
-        }
-      });
+      let output = '';
+      let detectedPort = null;
 
       this.process.stdout.on('data', (data) => {
-        const output = data.toString('utf-8').trim();
-        if (output) {
-          this.log(output);
+        const text = data.toString('utf-8');
+        output += text;
+        this.log(text.trim());
+        
+        const portMatch = text.match(/http:\/\/.*:(\d+)/);
+        if (portMatch) {
+          detectedPort = portMatch[1];
         }
       });
 
       this.process.stderr.on('data', (data) => {
-        const output = data.toString('utf-8').trim();
-        if (output) {
-          this.log(output, 'error');
-        }
+        const text = data.toString('utf-8');
+        output += text;
+        this.log(text.trim(), 'error');
       });
 
-      // 轮询检测服务是否启动成功
-      const checkInterval = setInterval(async () => {
-        const status = await this.checkGatewayStatus();
-        if (status.isRunning) {
-          clearInterval(checkInterval);
-          clearTimeout(timeout);
-          this.port = status.port;
-          this.isRunning = true;
-          this.log(`服务已启动，端口: ${this.port}`);
-          if (this.startCallback) {
-            this.startCallback({ port: this.port, pid: status.pid });
-          }
-          resolve({ port: this.port, pid: status.pid });
-        }
-      }, 1000);
-
-      // 30秒超时
-      const timeout = setTimeout(() => {
-        clearInterval(checkInterval);
-        this.log('服务启动超时', 'error');
-        if (this.errorCallback) {
-          this.errorCallback('服务启动超时');
-        }
-        reject(new Error('服务启动超时'));
-      }, 30000);
-    });
-  }
-
-  async killProcessTree(pid) {
-    return new Promise((resolve) => {
-      // Windows 下用 taskkill 杀进程树
-      const killProcess = spawn('taskkill', ['/pid', String(pid), '/f', '/t'], {
-        windowsHide: true
+      this.process.on('error', (err) => {
+        this.log(`启动失败: ${err.message}`, 'error');
+        reject(err);
       });
-      
-      killProcess.on('exit', () => resolve());
-      killProcess.on('error', () => resolve());
-      
-      // 超时保护
+
       setTimeout(() => {
-        try { killProcess.kill(); } catch {}
-        resolve();
-      }, 5000);
+        if (this.process && this.process.pid) {
+          this.isRunning = true;
+          this.port = detectedPort || '18789';
+          const pid = this.process.pid;
+          
+          this.log(`OpenClaw 服务已启动 (PID: ${pid}, 端口: ${this.port})`);
+          
+          if (this.startCallback) {
+            this.startCallback({
+              pid: pid,
+              port: this.port
+            });
+          }
+          
+          resolve({
+            success: true,
+            pid: pid,
+            port: this.port
+          });
+        } else {
+          reject(new Error('服务启动失败，未获取到 PID'));
+        }
+      }, 3000);
     });
   }
 
-  stop() {
-    return new Promise(async (resolve) => {
-      if (!this.isRunning || !this.process) {
-        resolve();
-        return;
-      }
+  async stop() {
+    if (!this.isRunning || !this.process) {
+      this.log('服务未运行');
+      return { success: true };
+    }
 
+    return new Promise((resolve) => {
       this.log('正在停止 OpenClaw 服务...');
 
-      const pid = this.process.pid;
-      
-      // 先用 taskkill 杀进程树（包括所有子进程）
-      if (pid) {
-        await this.killProcessTree(pid);
-      }
-
-      // 确保进程已停止
-      if (this.process) {
+      if (this.process && this.process.pid) {
         try {
-          this.process.kill('SIGTERM');
-        } catch (err) {
-          // ignore
+          const result = require('child_process').execSync(
+            `taskkill /pid ${this.process.pid} /f /t 2>&1`,
+            { stdio: 'pipe' }
+          ).toString();
+          this.log(`Taskkill 结果: ${result}`);
+        } catch (e) {
+          this.log(`Taskkill 失败: ${e.message}`, 'warn');
         }
       }
 
-      this.log('服务已停止');
-      this.isRunning = false;
-      this.process = null;
-      this.port = null;
-      if (this.stopCallback) {
-        this.stopCallback();
-      }
-      resolve();
-    });
-  }
-
-  async checkPortInUse(port) {
-    return new Promise((resolve) => {
-      const net = require('net');
-      const socket = new net.Socket();
-      
-      socket.setTimeout(1000);
-      
-      socket.on('connect', () => {
-        socket.destroy();
-        resolve(true); // 端口被占用（服务在运行）
-      });
-      
-      socket.on('timeout', () => {
-        socket.destroy();
-        resolve(false);
-      });
-      
-      socket.on('error', () => {
-        resolve(false); // 端口未被占用
-      });
-      
-      socket.connect(port, '127.0.0.1');
-    });
-  }
-
-  async getPidByPort(port) {
-    return new Promise((resolve) => {
-      const { exec } = require('child_process');
-      exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
-        if (error || !stdout) {
-          resolve(null);
-          return;
-        }
+      // 额外检查端口占用并清理
+      try {
+        const port = this.port || '18789';
+        const netstat = require('child_process').execSync(
+          `netstat -ano | findstr :${port}`,
+          { stdio: 'pipe' }
+        ).toString();
         
-        // 解析 netstat 输出，找到 LISTENING 状态的进程
-        const lines = stdout.trim().split('\n');
+        const lines = netstat.split('\n');
         for (const line of lines) {
-          if (line.includes('LISTENING')) {
-            const parts = line.trim().split(/\s+/);
-            const pid = parseInt(parts[parts.length - 1]);
-            if (!isNaN(pid)) {
-              resolve(pid);
-              return;
+          const match = line.match(/\s+(\d+)$/);
+          if (match) {
+            const pid = match[1];
+            this.log(`检测到端口 ${port} 被 PID ${pid} 占用，正在清理...`);
+            try {
+              require('child_process').execSync(`taskkill /pid ${pid} /f /t`, { stdio: 'pipe' });
+            } catch (e) {
+              // 忽略错误
             }
           }
         }
-        resolve(null);
-      });
+      } catch (e) {
+        // 端口未被占用
+      }
+
+      this.process = null;
+      this.isRunning = false;
+      this.port = null;
+
+      if (this.stopCallback) {
+        this.stopCallback();
+      }
+
+      this.log('OpenClaw 服务已停止');
+      resolve({ success: true });
     });
   }
 
   async checkGatewayStatus() {
-    // 如果知道端口，直接检测端口是否被占用
-    if (this.port) {
-      const inUse = await this.checkPortInUse(this.port);
-      if (inUse) {
-        const pid = await this.getPidByPort(this.port);
-        return { isRunning: true, port: this.port, pid };
+    const defaultPort = '18789';
+    
+    try {
+      const netstat = require('child_process').execSync(
+        `netstat -ano | findstr :${defaultPort}`,
+        { stdio: 'pipe' }
+      ).toString();
+      
+      const lines = netstat.split('\n');
+      for (const line of lines) {
+        if (line.includes('LISTENING')) {
+          const match = line.match(/\s+(\d+)$/);
+          if (match) {
+            const pid = match[1];
+            this.log(`检测到 OpenClaw 运行中 (PID: ${pid}, 端口: ${defaultPort})`);
+            this.isRunning = true;
+            this.port = defaultPort;
+            return { isRunning: true, port: defaultPort, pid: pid };
+          }
+        }
       }
-      return { isRunning: false, port: null, pid: null };
+    } catch (e) {
+      // 端口未被占用
     }
     
-    // 否则尝试检测默认端口 18789
-    const defaultPort = 18789;
-    const inUse = await this.checkPortInUse(defaultPort);
-    if (inUse) {
-      const pid = await this.getPidByPort(defaultPort);
-      return { isRunning: true, port: defaultPort, pid };
-    }
+    this.isRunning = false;
+    this.port = null;
     return { isRunning: false, port: null, pid: null };
   }
 
@@ -280,7 +252,7 @@ class ServiceManager {
     const fs = require('fs');
     
     // 检查项目配置目录下的 openclaw.json 是否存在
-    const configDir = path.join(this.getResourcesPath(), 'config');
+    const configDir = this.getConfigDir();
     const configFile = path.join(configDir, 'openclaw.json');
     
     // 如果配置文件存在，认为已经初始化过
@@ -310,10 +282,7 @@ class ServiceManager {
 
       const setupProcess = spawn(this.getNodePath(), args, {
         cwd: path.dirname(this.getOpenclawPath()),
-        env: {
-          ...process.env,
-          NODE_ENV: 'production'
-        }
+        env: this.getEnv()
       });
 
       let output = '';
@@ -355,10 +324,7 @@ class ServiceManager {
 
       const dashboardProcess = spawn(this.getNodePath(), args, {
         cwd: path.dirname(this.getOpenclawPath()),
-        env: {
-          ...process.env,
-          NODE_ENV: 'production'
-        }
+        env: this.getEnv()
       });
 
       let output = '';

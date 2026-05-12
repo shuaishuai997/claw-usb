@@ -12,18 +12,12 @@
     "!dist/*",
     "!resources/node/**",
     "!resources/openclaw/**",
-    "!certs/**",
-    "config/**"
+    "!certs/**"
   ],
   "extraResources": [
     {
       "from": "resources",
       "to": ".",
-      "filter": ["**/*"]
-    },
-    {
-      "from": "config",
-      "to": "config",
       "filter": ["**/*"]
     }
   ],
