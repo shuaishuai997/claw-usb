@@ -11,142 +11,200 @@
       box-sizing: border-box;
     }
 
+    :root {
+      --primary-color: #6366f1;
+      --primary-hover: #818cf8;
+      --success-color: #10b981;
+      --success-hover: #34d399;
+      --danger-color: #ef4444;
+      --danger-hover: #f87171;
+      --warning-color: #f59e0b;
+      --warning-hover: #fbbf24;
+      --info-color: #3b82f6;
+      --info-hover: #60a5fa;
+      --text-color: #e5e7eb;
+      --text-muted: #9ca3af;
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --border-color: #334155;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --radius-sm: 4px;
+    }
+
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      color: #ffffff;
+      font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, #1a1a2e 100%);
+      color: var(--text-color);
       overflow: hidden;
+      min-height: 100vh;
     }
 
     .title-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 40px;
-      background: linear-gradient(90deg, #2d2d44 0%, #1a1a2e 100%);
-      padding: 0 15px;
+      height: 48px;
+      background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+      padding: 0 16px;
       -webkit-app-region: drag;
-      border-bottom: 1px solid #3a3a5c;
+      border-bottom: 1px solid var(--border-color);
+      box-shadow: var(--shadow);
     }
 
     .title-bar-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .activation-status {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--danger-color);
+      color: white;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .activation-status.active {
+      background: var(--success-color);
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
     }
 
     .logo {
-      width: 24px;
-      height: 24px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 14px;
+      width: 28px;
+      height: 28px;
+      background-image: url('icon.ico');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: var(--radius);
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
     }
 
     .title {
-      font-size: 14px;
+      font-size: 15px;
       font-weight: 600;
-      color: #e0e0e0;
+      color: var(--text-color);
+      letter-spacing: 0.3px;
     }
 
     .title-bar-right {
       display: flex;
-      gap: 5px;
+      gap: 6px;
       -webkit-app-region: no-drag;
     }
 
     .title-btn {
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border: none;
       background: transparent;
-      color: #888;
+      color: var(--text-muted);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 5px;
-      transition: all 0.2s;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      font-size: 14px;
     }
 
     .title-btn:hover {
-      background: #3a3a5c;
-      color: #fff;
+      background: var(--bg-tertiary);
+      color: var(--text-color);
     }
 
     .title-btn.close:hover {
-      background: #e74c3c;
-      color: #fff;
+      background: var(--danger-color);
+      color: white;
     }
 
     .main-content {
-      padding: 20px;
-      height: calc(100vh - 40px);
+      padding: 24px;
+      height: calc(100vh - 48px);
       overflow-y: auto;
     }
 
     .header-section {
       text-align: center;
-      margin-bottom: 25px;
+      margin-bottom: 32px;
     }
 
     .header-logo {
-      width: 60px;
-      height: 60px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 15px;
-      margin: 0 auto 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+      width: 100px;
+      height: 100px;
+      background-image: url('icon.ico');
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+      border-radius: 20px;
+      margin: 0 auto 20px;
+      box-shadow: 0 10px 40px rgba(99, 102, 241, 0.35);
+      transition: transform 0.3s ease;
+    }
+
+    .header-logo:hover {
+      transform: scale(1.05);
     }
 
     .header-title {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 700;
-      color: #fff;
-      margin-bottom: 5px;
+      color: var(--text-color);
+      margin-bottom: 8px;
+      letter-spacing: 0.5px;
     }
 
     .header-subtitle {
-      font-size: 12px;
-      color: #888;
+      font-size: 13px;
+      color: var(--text-muted);
     }
 
     .status-card {
-      background: linear-gradient(135deg, #2d2d44 0%, #1e1e32 100%);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border: 1px solid #3a3a5c;
-      transition: all 0.3s;
+      background: linear-gradient(135deg, var(--bg-secondary) 0%, #1e1e32 100%);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-color);
+      transition: all 0.3s ease;
+      box-shadow: var(--shadow);
+    }
+
+    .status-card:hover {
+      border-color: var(--primary-color);
+      box-shadow: var(--shadow-lg);
     }
 
     .status-header {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
+      gap: 14px;
+      margin-bottom: 10px;
     }
 
     .status-dot {
-      width: 12px;
-      height: 12px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       animation: pulse 2s infinite;
+      box-shadow: 0 0 8px currentColor;
     }
 
     .status-dot.running {
-      background: #10b981;
+      background: var(--success-color);
+      color: var(--success-color);
     }
 
     .status-dot.stopped {
       background: #666;
+      color: #666;
       animation: none;
     }
 
@@ -307,13 +365,14 @@
     }
 
     .btn-success {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: #fff;
+      background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+      color: white;
     }
 
-    .btn-success:hover {
+    .btn-success:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);
+      background: linear-gradient(135deg, var(--success-hover) 0%, var(--success-color) 100%);
     }
 
     .btn-success:disabled {
@@ -323,12 +382,69 @@
     }
 
     .btn-secondary {
-      background: #3a3a5c;
-      color: #e0e0e0;
+      background: linear-gradient(135deg, var(--bg-tertiary) 0%, #475569 100%);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
     }
 
-    .btn-secondary:hover {
-      background: #4a4a7c;
+    .btn-secondary:hover:not(:disabled) {
+      background: linear-gradient(135deg, #475569 0%, var(--bg-tertiary) 100%);
+      border-color: var(--primary-color);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
+      background: linear-gradient(135deg, var(--danger-hover) 0%, var(--danger-color) 100%);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+      color: white;
+    }
+
+    .btn-warning:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35);
+      background: linear-gradient(135deg, var(--warning-hover) 0%, var(--warning-color) 100%);
+    }
+
+    .btn-info {
+      background: linear-gradient(135deg, var(--info-color) 0%, #2563eb 100%);
+      color: white;
+    }
+
+    .btn-info:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+      background: linear-gradient(135deg, var(--info-hover) 0%, var(--info-color) 100%);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(99, 102, 241, 0.35);
+      background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+    }
+
+    .btn-outline:hover:not(:disabled) {
+      border-color: var(--primary-color);
+      color: var(--primary-color);
     }
 
     .logs-section {
@@ -396,16 +512,44 @@
     }
 
     .btn-large {
-      padding: 12px 28px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      gap: 4px;
+      padding: 14px 12px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      min-width: 85px;
+    }
+
+    .btn-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .btn-text {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: normal;
+      text-align: center;
+      line-height: 1.2;
+      white-space: nowrap;
+      text-shadow: none;
+      backface-visibility: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
     }
 
     .btn-large:disabled {
@@ -454,11 +598,7 @@
       background: #4a4a7c;
     }
 
-    .btn-text {
-      background: transparent;
-      color: #667eea;
-      border: 1px solid #667eea;
-    }
+ 
 
     .btn-text:hover {
       background: rgba(102, 126, 234, 0.1);
@@ -593,6 +733,28 @@
       color: #ef4444;
     }
 
+    .restore-warning {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .restore-warning .warning-icon {
+      font-size: 48px;
+      margin-bottom: 15px;
+    }
+
+    .restore-warning p {
+      color: var(--text-color);
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+
+    .restore-warning .warning-text {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
     .feature-list {
       list-style: none;
       padding: 0;
@@ -693,6 +855,7 @@
     <div class="title-bar-left">
       <div class="logo">O</div>
       <span class="title">OpenClaw U盘版 v1.1.1</span>
+      <span class="activation-status" id="activation-status">未激活</span>
     </div>
     <div class="title-bar-right">
       <button class="title-btn" id="min-btn">
@@ -736,25 +899,34 @@
 
     <div class="bottom-actions">
       <button class="btn-large btn-danger" id="stop-btn" disabled>
-        <span style="font-size: 16px;">&#x25FC;</span> 
+        <span class="btn-icon">⏹</span>
+        <span class="btn-text">停止服务</span>
       </button>
-      <button class="btn-large btn-primary" id="start-btn">
-        <span style="font-size: 16px;">&#x25B6;</span> 
+      <button class="btn-large btn-success" id="start-btn">
+        <span class="btn-icon">▶</span>
+        <span class="btn-text">启动服务</span>
       </button>
       <button class="btn-large btn-warning" id="restore-btn">
-        <span style="font-size: 16px;">&#x27F3;</span> 
+        <span class="btn-icon">↻</span>
+        <span class="btn-text">恢复默认</span>
       </button>
-      <button class="btn-large btn-text" id="api-btn">
-     API Key
+     <button class="btn-large btn-info" id="dashboard-btn" disabled>
+        <span class="btn-icon">🌐</span>
+        <span class="btn-text">打开龙虾控制面板</span>
       </button>
-      <button class="btn-large btn-info" id="license-btn">
-          秘钥
+      <button class="btn-large btn-secondary" id="api-btn">
+        <span class="btn-icon">🔑</span>
+        <span class="btn-text">API Key</span>
       </button>
-      <button class="btn-large btn-primary" id="dashboard-btn" disabled>
-        <span style="font-size: 16px;">&#x1F517;</span> 
+   
+      <button class="btn-large btn-danger" id="license-btn">
+        <span class="btn-icon">🔐</span>
+        <span class="btn-text">去激活</span>
       </button>
-      <button class="btn-large btn-warning" id="setup-btn">
-        <span style="font-size: 16px;">&#x1F6E0;</span> 
+    
+      <button class="btn-large btn-primary" id="setup-btn">
+        <span class="btn-icon">⚙️</span>
+        <span class="btn-text">一键初始化</span>
       </button>
     </div>
   </div>
@@ -768,28 +940,40 @@
       <div class="success-message" id="api-success">配置保存成功！</div>
       <div class="error-message" id="api-error">请检查输入项</div>
       <div class="form-group">
-        <label class="form-label">API Key</label>
-        <input type="password" class="form-input" id="api-key-input" placeholder="请输入您的 API Key">
-      </div>
-      <div class="form-group">
         <label class="form-label">模型提供者</label>
         <select class="form-input" id="provider-select">
         </select>
       </div>
       <div class="form-group">
+        <label class="form-label">API Key</label>
+        <input type="password" class="form-input" id="api-key-input" placeholder="请输入您的 API Key">
+      </div>
+      <div class="form-group">
         <label class="form-label">模型 ID</label>
         <input type="text" class="form-input" id="model-input" placeholder="如: gpt-4o, claude-opus-4-6, kimi-k2.5">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="api-address-group" style="display: none;">
         <label class="form-label">API 地址</label>
         <input type="text" class="form-input" id="provider-url-input" placeholder="如：https://api.deepseek.com/v1">
       </div>
-      <div class="form-group">
+      <div class="form-group" id="api-type-group" style="display: none;">
         <label class="form-label">API 协议</label>
         <select class="form-input" id="api-type-select">
           <option value="openai-completions">OpenAI 兼容</option>
           <option value="anthropic-messages">Anthropic 兼容</option>
         </select>
+      </div>
+      <div class="form-group" id="test-group" style="display: none;">
+        <button class="btn btn-secondary" id="test-model-btn" style="width: 100%">测试连接并获取模型列表</button>
+      </div>
+      <div class="form-group" id="model-list-group" style="display: none;">
+        <label class="form-label">可用模型列表</label>
+        <select class="form-input" id="model-list-select" style="max-height: 200px; overflow-y: auto;">
+          <option value="">点击测试按钮获取模型列表</option>
+        </select>
+      </div>
+      <div class="form-group" id="simple-test-group">
+        <button class="btn btn-secondary" id="simple-test-btn" style="width: 100%">测试 API 连接</button>
       </div>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="api-cancel">取消</button>
@@ -813,7 +997,7 @@
         </div>
         <div class="license-row">
           <span class="license-label">授权密钥</span>
-          <span class="license-value">******</span>
+          <span class="license-value" id="license-key-display">******</span>
         </div>
         <div class="license-row">
           <span class="license-label">到期时间</span>
@@ -839,6 +1023,24 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="restore-modal">
+    <div class="modal" style="max-width: 400px;">
+      <div class="modal-header">
+        <span class="modal-title">恢复默认配置</span>
+        <button class="modal-close" id="restore-modal-close">&#x00D7;</button>
+      </div>
+      <div class="restore-warning">
+        <div class="warning-icon">⚠️</div>
+        <p>确定要恢复默认配置吗？</p>
+        <p class="warning-text">此操作将清除 OpenClaw 的所有配置，包括 API 设置和模型配置。清除后需要重新进行一键初始化。</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="restore-cancel">取消</button>
+        <button class="btn btn-danger" id="restore-confirm">确认恢复</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
 
   <script>
@@ -854,9 +1056,23 @@
     const licenseModal = document.getElementById('license-modal')
     const toast = document.getElementById('toast')
     const dashboardBtn = document.getElementById('dashboard-btn')
+    const activationStatus = document.getElementById('activation-status')
 
     let startTime = null
     let uptimeInterval = null
+    let isActivated = false
+
+    const FUNCTIONAL_BUTTONS = [
+      'start-btn', 'api-btn', 'setup-btn', 'restore-btn',
+      'api-save', 'api-cancel', 'test-model-btn', 'simple-test-btn'
+    ]
+
+    function setFunctionalButtonsEnabled(enabled) {
+      FUNCTIONAL_BUTTONS.forEach(btnId => {
+        const btn = document.getElementById(btnId)
+        if (btn) btn.disabled = !enabled
+      })
+    }
 
     const PROVIDER_CONFIG = {
       deepseek: { url: 'https://api.deepseek.com/v1', api: 'openai-completions' },
@@ -890,6 +1106,17 @@
         `<option value="${key}">${PROVIDER_LABELS[key] || key.toUpperCase()}</option>`
       ).join('')
       providerSelect.innerHTML = options
+    }
+
+    function checkSetupNeeded() {
+      ipcRenderer.send('check-setup-needed')
+    }
+
+    function hideSetupButton() {
+      const setupBtn = document.getElementById('setup-btn')
+      if (setupBtn) {
+        setupBtn.style.display = 'none'
+      }
     }
 
     function showToast(message, type = 'info') {
@@ -927,13 +1154,15 @@
         statusTitle.className = 'status-title starting'
         statusTitle.textContent = 'OpenClaw 启动中...'
         statusDesc.textContent = '正在初始化服务，请稍候...'
+        startBtn.dataset.running = ''
       } else if (isRunning) {
         statusDot.className = 'status-dot running'
         statusTitle.className = 'status-title running'
         statusTitle.textContent = 'OpenClaw 运行中'
-        statusDesc.textContent = '已就绪，可在聊天工具中开始使用'
+        statusDesc.textContent = '已就绪，打开控制中开始使用'
         startTime = Date.now()
         startUptimeCounter()
+        startBtn.dataset.running = 'true'
       } else {
         statusDot.className = 'status-dot stopped'
         statusTitle.className = 'status-title stopped'
@@ -943,10 +1172,11 @@
         document.getElementById('pid-value').textContent = '-'
         document.getElementById('port-value').textContent = '-'
         document.getElementById('uptime-value').textContent = '-'
+        startBtn.dataset.running = ''
       }
-      startBtn.disabled = isRunning || isStarting
-      stopBtn.disabled = !isRunning
-      dashboardBtn.disabled = !isRunning
+      startBtn.disabled = isRunning || isStarting || !isActivated
+      stopBtn.disabled = !isRunning || !isActivated
+      dashboardBtn.disabled = !isRunning || !isActivated
     }
 
     function startUptimeCounter() {
@@ -981,6 +1211,7 @@
 
     ipcRenderer.on('service-status', (event, status) => {
       updateStatus(status.isRunning)
+      checkSetupNeeded()
       if (status.pid) {
         document.getElementById('pid-value').textContent = status.pid
       }
@@ -1021,6 +1252,27 @@
     document.getElementById('api-btn').addEventListener('click', () => {
       ipcRenderer.send('get-all-config')
       apiModal.classList.add('show')
+      
+      const providerSelect = document.getElementById('provider-select')
+      const apiAddressGroup = document.getElementById('api-address-group')
+      const apiTypeGroup = document.getElementById('api-type-group')
+      const testGroup = document.getElementById('test-group')
+      const modelListGroup = document.getElementById('model-list-group')
+      const simpleTestGroup = document.getElementById('simple-test-group')
+      
+      if (providerSelect.value === 'custom') {
+        apiAddressGroup.style.display = 'block'
+        apiTypeGroup.style.display = 'block'
+        testGroup.style.display = 'block'
+        modelListGroup.style.display = 'block'
+        simpleTestGroup.style.display = 'none'
+      } else {
+        apiAddressGroup.style.display = 'none'
+        apiTypeGroup.style.display = 'none'
+        testGroup.style.display = 'none'
+        modelListGroup.style.display = 'none'
+        simpleTestGroup.style.display = 'block'
+      }
     })
 
     document.getElementById('api-modal-close').addEventListener('click', () => {
@@ -1033,6 +1285,26 @@
 
     document.getElementById('provider-select').addEventListener('change', (e) => {
       updateProviderUrl(e.target.value)
+      
+      const apiAddressGroup = document.getElementById('api-address-group')
+      const apiTypeGroup = document.getElementById('api-type-group')
+      const testGroup = document.getElementById('test-group')
+      const modelListGroup = document.getElementById('model-list-group')
+      const simpleTestGroup = document.getElementById('simple-test-group')
+      
+      if (e.target.value === 'custom') {
+        apiAddressGroup.style.display = 'block'
+        apiTypeGroup.style.display = 'block'
+        testGroup.style.display = 'block'
+        modelListGroup.style.display = 'block'
+        simpleTestGroup.style.display = 'none'
+      } else {
+        apiAddressGroup.style.display = 'none'
+        apiTypeGroup.style.display = 'none'
+        testGroup.style.display = 'none'
+        modelListGroup.style.display = 'none'
+        simpleTestGroup.style.display = 'block'
+      }
     })
 
     ipcRenderer.on('api-key', (event, apiKey) => {
@@ -1079,6 +1351,105 @@
       showToast('配置保存成功！', 'success')
     })
 
+    document.getElementById('test-model-btn').addEventListener('click', async () => {
+      const provider = document.getElementById('provider-select').value
+      const providerUrl = document.getElementById('provider-url-input').value
+      const apiKey = document.getElementById('api-key-input').value
+      const apiType = document.getElementById('api-type-select').value
+
+      if (!providerUrl.trim()) {
+        showToast('请先输入 API 地址', 'error')
+        return
+      }
+
+      const testBtn = document.getElementById('test-model-btn')
+      const originalText = testBtn.textContent
+      testBtn.textContent = '测试中...'
+      testBtn.disabled = true
+
+      try {
+        const response = await fetch(`${providerUrl.replace(/\/$/, '')}/models`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        const modelListSelect = document.getElementById('model-list-select')
+        
+        if (data.data && Array.isArray(data.data)) {
+          const options = data.data.map(model => 
+            `<option value="${model.id}">${model.id} (${model.name || model.id})</option>`
+          ).join('')
+          modelListSelect.innerHTML = `<option value="">选择模型...</option>` + options
+          showToast(`获取到 ${data.data.length} 个模型`, 'success')
+        } else {
+          modelListSelect.innerHTML = '<option value="">未找到模型列表</option>'
+          showToast('未找到模型列表', 'error')
+        }
+      } catch (error) {
+        const modelListSelect = document.getElementById('model-list-select')
+        modelListSelect.innerHTML = '<option value="">测试失败</option>'
+        showToast(`测试失败：${error.message}`, 'error')
+      } finally {
+        testBtn.textContent = originalText
+        testBtn.disabled = false
+      }
+    })
+
+    document.getElementById('model-list-select').addEventListener('change', (e) => {
+      if (e.target.value) {
+        document.getElementById('model-input').value = e.target.value
+      }
+    })
+
+    document.getElementById('simple-test-btn').addEventListener('click', async () => {
+      const providerUrl = document.getElementById('provider-url-input').value
+      const apiKey = document.getElementById('api-key-input').value
+
+      if (!providerUrl.trim()) {
+        showToast('请先输入 API 地址', 'error')
+        return
+      }
+
+      const testBtn = document.getElementById('simple-test-btn')
+      const originalText = testBtn.textContent
+      testBtn.textContent = '测试中...'
+      testBtn.disabled = true
+
+      try {
+        const response = await fetch(`${providerUrl.replace(/\/$/, '')}/models`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json'
+          }
+        })
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        if (data.data && Array.isArray(data.data)) {
+          showToast(`连接成功！可用模型数：${data.data.length}`, 'success')
+        } else {
+          showToast('连接成功！', 'success')
+        }
+      } catch (error) {
+        showToast(`测试失败：${error.message}`, 'error')
+      } finally {
+        testBtn.textContent = originalText
+        testBtn.disabled = false
+      }
+    })
+
     ipcRenderer.on('model-config-applied', (event, result) => {
       if (result.success) {
         addLog('[INFO] 模型配置已更新')
@@ -1100,21 +1471,40 @@
       licenseModal.classList.remove('show')
     })
 
-    ipcRenderer.on('license', (event, license) => {
-      const statusEl = document.getElementById('license-status')
-      const expiresEl = document.getElementById('license-expires')
-      if (license.activated) {
-        statusEl.className = 'license-value active'
-        statusEl.textContent = '已激活'
-        expiresEl.textContent = license.expires || '永久'
-      } else {
-        statusEl.className = 'license-value inactive'
-        statusEl.textContent = '未激活'
-        expiresEl.textContent = '未设置'
+    ipcRenderer.on('setup-needed', (event, needed) => {
+      if (!needed) {
+        hideSetupButton()
       }
     })
 
-    document.getElementById('license-activate').addEventListener('click', () => {
+    ipcRenderer.on('license', (event, license) => {
+      const statusEl = document.getElementById('license-status')
+      const expiresEl = document.getElementById('license-expires')
+      const keyEl = document.getElementById('license-key-display')
+      const activationStatus = document.getElementById('activation-status')
+      
+      if (license.activated) {
+        isActivated = true
+        statusEl.className = 'license-value active'
+        statusEl.textContent = '已激活'
+        expiresEl.textContent = license.expiresAt ? new Date(license.expiresAt).toLocaleDateString() : '永久'
+        keyEl.textContent = license.licenseKey ? `${license.licenseKey.slice(0, 4)}...${license.licenseKey.slice(-4)}` : '未知'
+        setFunctionalButtonsEnabled(true)
+        activationStatus.textContent = '已激活'
+        activationStatus.classList.add('active')
+      } else {
+        isActivated = false
+        statusEl.className = 'license-value inactive'
+        statusEl.textContent = '未激活'
+        expiresEl.textContent = '未设置'
+        keyEl.textContent = '-'
+        setFunctionalButtonsEnabled(false)
+        activationStatus.textContent = '未激活'
+        activationStatus.classList.remove('active')
+      }
+    })
+
+    document.getElementById('license-activate').addEventListener('click', async () => {
       const key = document.getElementById('license-key-input').value
       if (!key.trim()) {
         document.getElementById('license-error').classList.add('show')
@@ -1123,32 +1513,66 @@
         }, 3000)
         return
       }
+      
+      const activateBtn = document.getElementById('license-activate')
+      const originalText = activateBtn.textContent
+      activateBtn.textContent = '激活中...'
+      activateBtn.disabled = true
+      
       ipcRenderer.send('activate-license', key)
     })
 
-    ipcRenderer.on('license-activated', (event, success) => {
-      if (success) {
+    ipcRenderer.on('license-activated', (event, result) => {
+      const activateBtn = document.getElementById('license-activate')
+      activateBtn.textContent = '激活'
+      activateBtn.disabled = false
+      
+      if (result.activated) {
         const successMsg = document.getElementById('license-success')
         successMsg.classList.add('show')
         ipcRenderer.send('get-license')
         setTimeout(() => {
           successMsg.classList.remove('show')
-        }, 2000)
-        showToast('授权激活成功！', 'success')
+          licenseModal.classList.remove('show')
+        }, 1500)
+        showToast(result.message || '授权激活成功！', 'success')
+      } else {
+        showToast(result.message || '激活失败', 'error')
       }
     })
 
+    ipcRenderer.on('license-invalid', () => {
+      isActivated = false
+      setFunctionalButtonsEnabled(false)
+      showActivationRequired()
+      showToast('授权验证失败，请重新激活', 'error')
+    })
+
     document.getElementById('restore-btn').addEventListener('click', () => {
-      if (confirm('确定要恢复默认设置吗？这将清除所有配置。')) {
-        addLog('[INFO] 正在执行一键恢复...')
-        ipcRenderer.send('restore-defaults')
-      }
+      const restoreModal = document.getElementById('restore-modal')
+      restoreModal.classList.add('show')
+    })
+
+    document.getElementById('restore-modal-close').addEventListener('click', () => {
+      document.getElementById('restore-modal').classList.remove('show')
+    })
+
+    document.getElementById('restore-cancel').addEventListener('click', () => {
+      document.getElementById('restore-modal').classList.remove('show')
+    })
+
+    document.getElementById('restore-confirm').addEventListener('click', () => {
+      document.getElementById('restore-modal').classList.remove('show')
+      addLog('[INFO] 正在执行一键恢复...')
+      ipcRenderer.send('restore-defaults')
     })
 
     ipcRenderer.on('restore-complete', (event, success) => {
       if (success) {
         addLog('[SUCCESS] 一键恢复完成')
         showToast('一键恢复完成！', 'success')
+        const setupBtn = document.getElementById('setup-btn')
+        if (setupBtn) setupBtn.style.display = ''
       }
     })
 
@@ -1183,6 +1607,8 @@
     })
 
     initProviderSelect()
+    setFunctionalButtonsEnabled(false)
+    ipcRenderer.send('get-license')
     addLog('[INFO] OpenClaw U 盘版 v1.1.1 已启动')
   </script>
 </body>

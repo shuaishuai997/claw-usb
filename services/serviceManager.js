@@ -290,6 +290,22 @@ class ServiceManager {
       port: this.port
     };
   }
+
+  async isSetupNeeded() {
+    const fs = require('fs');
+    const configPath = path.join(__dirname, '../config/openclaw.json');
+    
+    try {
+      if (fs.existsSync(configPath)) {
+        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+        return !config.models || !config.models.providers || Object.keys(config.models.providers).length === 0;
+      }
+      return true;
+    } catch (error) {
+      this.log(`检查初始化状态失败: ${error.message}`, 'error');
+      return true;
+    }
+  }
 }
 
 module.exports = ServiceManager;

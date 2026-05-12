@@ -3,19 +3,22 @@ const path = require('path')
 const fs = require('fs')
 const ServiceManager = require('./services/serviceManager')
 const ConfigManager = require('./services/configManager')
+const LicenseManager = require('./services/licenseManager')
 
 let mainWindow
 let tray = null
 const serviceManager = new ServiceManager()
 const configManager = new ConfigManager()
+const licenseManager = new LicenseManager()
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1000,
-    height: 750,
-    minWidth: 800,
+    width: 500,
+    height: 860,
+    minWidth: 500,
     minHeight: 600,
     title: 'OpenClaw U盘版 v1.1.1',
+    icon: path.join(__dirname, 'icon.ico'),
     frame: false,
     webPreferences: {
       nodeIntegration: true,
@@ -142,13 +145,24 @@ ipcMain.on('restore-defaults', (event) => {
   event.reply('restore-complete', success)
 })
 
-ipcMain.on('get-license', (event) => {
-  event.reply('license', configManager.getLicense())
+ipcMain.on('check-setup-needed', async (event) => {
+  const needed = await serviceManager.isSetupNeeded()
+  event.reply('setup-needed', needed)
 })
 
-ipcMain.on('activate-license', (event, key) => {
-  const success = configManager.activateLicense(key)
-  event.reply('license-activated', success)
+ipcMain.on('get-license', async (event) => {
+  const info = await licenseManager.getLicenseInfo()
+  event.reply('license', info)
+})
+
+ipcMain.on('activate-license', async (event, key) => {
+  const result = await licenseManager.activateLicense(key)
+  event.reply('license-activated', result)
+})
+
+ipcMain.on('clear-license', () => {
+  licenseManager.clearActivation()
+  event.reply('license-cleared')
 })
 
 ipcMain.on('minimize-window', () => {
@@ -280,6 +294,13 @@ app.whenReady().then(() => {
   createWindow()
   createTray()
   setupServiceCallbacks()
+  
+  licenseManager.init(() => {
+    console.log('[License] License invalid, notifying user')
+    if (mainWindow) {
+      mainWindow.webContents.send('license-invalid')
+    }
+  })
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

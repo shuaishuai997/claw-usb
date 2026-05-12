@@ -127,8 +127,16 @@ class ConfigManager {
   }
 
   restoreDefaults() {
-    this.config = this.getDefaultConfig();
-    return this.saveConfig();
+    try {
+      if (fs.existsSync(this.openclawConfigPath)) {
+        fs.unlinkSync(this.openclawConfigPath);
+      }
+      this.config = this.getDefaultConfig();
+      return this.saveConfig();
+    } catch (error) {
+      console.error('恢复默认配置失败:', error);
+      return false;
+    }
   }
 
   getAll() {
