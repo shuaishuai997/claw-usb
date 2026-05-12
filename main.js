@@ -6,6 +6,7 @@ const ConfigManager = require('./services/configManager')
 const LicenseManager = require('./services/licenseManager')
 
 let mainWindow
+let isQuitting = false
 const serviceManager = new ServiceManager()
 const configManager = new ConfigManager()
 const licenseManager = new LicenseManager()
@@ -16,7 +17,7 @@ function createWindow() {
     height: 860,
     minWidth: 500,
     minHeight: 600,
-    title: 'OpenClaw U盘版 v1.1.1',
+    title: 'OpenClaw U盘版 vx-LLOOVVEE_LL',
     icon: path.join(__dirname, 'icon.ico'),
     frame: false,
     webPreferences: {
@@ -28,12 +29,24 @@ function createWindow() {
 
   mainWindow.loadFile('index.html')
 
+  function quitApp() {
+  serviceManager.setLogCallback(null)
+  serviceManager.setStartCallback(null)
+  serviceManager.setErrorCallback(null)
+  serviceManager.setStopCallback(null)
+  if (mainWindow) {
+    mainWindow.destroy()
+    mainWindow = null
+  }
+  app.exit(0)
+}
+
   mainWindow.on('close', async (e) => {
-    e.preventDefault()
-    await serviceManager.stop()
-    if (mainWindow) {
-      mainWindow.destroy()
-      mainWindow = null
+    if (!isQuitting) {
+      e.preventDefault()
+      isQuitting = true
+      await serviceManager.stop()
+      quitApp()
     }
   })
 }
@@ -129,7 +142,7 @@ ipcMain.on('minimize-window', () => {
 })
 
 ipcMain.on('hide-window', () => {
-  mainWindow.hide()
+  mainWindow.close()
 })
 
 ipcMain.on('open-dashboard', async (event) => {
@@ -267,7 +280,25 @@ app.whenReady().then(() => {
   })
 })
 
+// 在关闭前先停掉服务
+app.on('before-quit', async (event) => {
+  console.log('[Shutdown] Stopping OpenClaw service before quit...')
+  event.preventDefault()
+  serviceManager.setLogCallback(null)
+  serviceManager.setStartCallback(null)
+  serviceManager.setErrorCallback(null)
+  serviceManager.setStopCallback(null)
+  await serviceManager.stop()
+  console.log('[Shutdown] Service stopped, quitting now...')
+  app.quit()
+})
+
 app.on('window-all-closed', async () => {
+  console.log('[Shutdown] All windows closed, stopping service...')
+  serviceManager.setLogCallback(null)
+  serviceManager.setStartCallback(null)
+  serviceManager.setErrorCallback(null)
+  serviceManager.setStopCallback(null)
   await serviceManager.stop()
   if (process.platform !== 'darwin') {
     app.quit()

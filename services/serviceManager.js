@@ -61,7 +61,10 @@ class ServiceManager {
     const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 23);
     const logMessage = `[${timestamp}:${type.toUpperCase()}] ${message}`;
     if (this.logCallback) {
-      this.logCallback(logMessage);
+      try {
+        this.logCallback(logMessage);
+      } catch (e) {
+      }
     }
     console.log(logMessage);
   }
@@ -145,62 +148,101 @@ class ServiceManager {
   }
 
   async stop() {
-    if (!this.isRunning || !this.process) {
-      this.log('服务未运行');
-      return { success: true };
-    }
+    this.log('正在停止 OpenClaw 服务...');
 
-    return new Promise((resolve) => {
-      this.log('正在停止 OpenClaw 服务...');
-
-      if (this.process && this.process.pid) {
-        try {
-          const result = require('child_process').execSync(
-            `taskkill /pid ${this.process.pid} /f /t 2>&1`,
-            { stdio: 'pipe' }
-          ).toString();
-          this.log(`Taskkill 结果: ${result}`);
-        } catch (e) {
-          this.log(`Taskkill 失败: ${e.message}`, 'warn');
-        }
-      }
-
-      // 额外检查端口占用并清理
+    const killProcess = (pid, label = '') => {
+      if (!pid) return;
       try {
-        const port = this.port || '18789';
-        const netstat = require('child_process').execSync(
-          `netstat -ano | findstr :${port}`,
+        const result = require('child_process').execSync(
+          `taskkill /pid ${pid} /f /t 2>&1`,
           { stdio: 'pipe' }
         ).toString();
-        
-        const lines = netstat.split('\n');
-        for (const line of lines) {
+        this.log(`Taskkill ${label}(PID ${pid}): ${result}`);
+      } catch (e) {
+        this.log(`Taskkill ${label}(PID ${pid}) 失败: ${e.message}`, 'warn');
+      }
+    };
+
+    const killProcessTree = (pid, label = '') => {
+      if (!pid) return;
+      try {
+        const result = require('child_process').execSync(
+          `wmic process where parentprocessid=${pid} call terminate 2>&1`,
+          { stdio: 'pipe' }
+        ).toString();
+        this.log(`WMIC 杀子进程 ${label}(PID ${pid}): ${result}`);
+      } catch (e) {
+      }
+      killProcess(pid, label);
+    };
+
+    // 1. 杀掉当前管理的进程（包括子进程树）
+    if (this.process && this.process.pid) {
+      killProcessTree(this.process.pid, 'main');
+    }
+
+    // 2. 检查端口占用并清理（只杀 LISTENING 状态的，包括子进程）
+    try {
+      const port = this.port || '18789';
+      const netstat = require('child_process').execSync(
+        `netstat -ano | findstr :${port}`,
+        { stdio: 'pipe' }
+      ).toString();
+      
+      const lines = netstat.split('\n');
+      for (const line of lines) {
+        if (line.includes('LISTENING')) {
           const match = line.match(/\s+(\d+)$/);
           if (match) {
             const pid = match[1];
             this.log(`检测到端口 ${port} 被 PID ${pid} 占用，正在清理...`);
-            try {
-              require('child_process').execSync(`taskkill /pid ${pid} /f /t`, { stdio: 'pipe' });
-            } catch (e) {
-              // 忽略错误
-            }
+            killProcessTree(pid, 'port');
           }
         }
-      } catch (e) {
-        // 端口未被占用
       }
+    } catch (e) {
+      this.log('端口未被占用');
+    }
 
-      this.process = null;
-      this.isRunning = false;
-      this.port = null;
-
-      if (this.stopCallback) {
-        this.stopCallback();
+    // 3. 额外检查：杀掉所有 openclaw 相关的 node 进程
+    try {
+      const tasklist = require('child_process').execSync(
+        `tasklist /FI "IMAGENAME eq node.exe" /FO CSV /NH`,
+        { stdio: 'pipe' }
+      ).toString();
+      
+      const processes = tasklist.split('\n');
+      for (const proc of processes) {
+        const pidMatch = proc.match(/"(\d+)"/);
+        if (pidMatch) {
+          const pid = pidMatch[1];
+          try {
+            const cmdline = require('child_process').execSync(
+              `wmic process where processid=${pid} get commandline 2>&1`,
+              { stdio: 'pipe' }
+            ).toString();
+            
+            if (cmdline.includes('openclaw') || cmdline.includes('gateway')) {
+              this.log(`清理 openclaw 相关进程 PID ${pid}`);
+              killProcessTree(pid, 'openclaw');
+            }
+          } catch (e) {
+          }
+        }
       }
+    } catch (e) {
+    }
 
-      this.log('OpenClaw 服务已停止');
-      resolve({ success: true });
-    });
+    this.process = null;
+    this.isRunning = false;
+    this.port = null;
+
+    if (this.stopCallback) {
+      this.stopCallback();
+    }
+
+    this.log('OpenClaw 服务已停止');
+    return { success: true };
   }
 
   async checkGatewayStatus() {

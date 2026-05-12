@@ -1039,10 +1039,16 @@
     let startTime = null
     let uptimeInterval = null
     let isActivated = false
+    let setupNeeded = false
 
     const FUNCTIONAL_BUTTONS = [
-      'start-btn', 'api-btn', 'setup-btn', 'restore-btn',
+      'start-btn', 'stop-btn', 'dashboard-btn', 'api-btn', 
+      'license-btn', 'setup-btn', 'restore-btn',
       'api-save', 'api-cancel', 'test-model-btn', 'simple-test-btn'
+    ]
+
+    const SETUP_BUTTONS = [
+      'start-btn', 'stop-btn', 'dashboard-btn', 'api-btn', 'license-btn'
     ]
 
     function setFunctionalButtonsEnabled(enabled) {
@@ -1094,6 +1100,34 @@
       const setupBtn = document.getElementById('setup-btn')
       if (setupBtn) {
         setupBtn.style.display = 'none'
+      }
+    }
+
+    function showSetupRequired() {
+      SETUP_BUTTONS.forEach(btnId => {
+        const btn = document.getElementById(btnId)
+        if (btn) btn.style.display = 'none'
+      })
+    }
+
+    function showAllButtons() {
+      SETUP_BUTTONS.forEach(btnId => {
+        const btn = document.getElementById(btnId)
+        if (btn) btn.style.display = ''
+      })
+    }
+
+    function hideActivateButton() {
+      const activateBtn = document.getElementById('license-activate')
+      if (activateBtn) {
+        activateBtn.style.display = 'none'
+      }
+    }
+
+    function showActivateButton() {
+      const activateBtn = document.getElementById('license-activate')
+      if (activateBtn) {
+        activateBtn.style.display = ''
       }
     }
 
@@ -1450,8 +1484,11 @@
     })
 
     ipcRenderer.on('setup-needed', (event, needed) => {
+      setupNeeded = needed
       if (!needed) {
         hideSetupButton()
+      } else {
+        showSetupRequired()
       }
     })
 
@@ -1470,6 +1507,7 @@
         setFunctionalButtonsEnabled(true)
         activationStatus.textContent = '已激活'
         activationStatus.classList.add('active')
+        hideActivateButton()
       } else {
         isActivated = false
         statusEl.className = 'license-value inactive'
@@ -1479,6 +1517,7 @@
         setFunctionalButtonsEnabled(false)
         activationStatus.textContent = '未激活'
         activationStatus.classList.remove('active')
+        showActivateButton()
       }
     })
 
@@ -1508,6 +1547,7 @@
       if (result.activated) {
         const successMsg = document.getElementById('license-success')
         successMsg.classList.add('show')
+        hideActivateButton()
         ipcRenderer.send('get-license')
         setTimeout(() => {
           successMsg.classList.remove('show')
@@ -1550,6 +1590,14 @@
       if (result.success) {
         addLog('[SUCCESS] 一键初始化完成')
         showToast('一键初始化完成', 'success')
+        setupNeeded = false
+        hideSetupButton()
+        showAllButtons()
+        if (isActivated) {
+          hideActivateButton()
+        }
+        ipcRenderer.send('check-setup-needed')
+        ipcRenderer.send('get-license')
       } else {
         addLog(`[ERROR] 初始化失败：${result.error}`)
         showToast(`初始化失败：${result.error}`, 'error')
