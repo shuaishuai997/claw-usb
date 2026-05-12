@@ -13,10 +13,10 @@ class ServiceManager {
   }
 
   getResourcesPath() {
-    if (process.resourcesPath) {
-      return path.join(__dirname, '../resources');
-    }
-    return path.join(__dirname, '../');
+    // if (process.resourcesPath) {
+    //   return process.resourcesPath;
+    // }
+    return path.join(__dirname, '../resources');
   }
 
   getNodePath() {
@@ -190,44 +190,76 @@ class ServiceManager {
     });
   }
 
-  async checkGatewayStatus() {
+  async checkPortInUse(port) {
     return new Promise((resolve) => {
-      const args = [this.getOpenclawPath(), 'gateway', 'status', '--json'];
+      const net = require('net');
+      const socket = new net.Socket();
       
-      const checkProcess = spawn(this.getNodePath(), args, {
-        cwd: path.dirname(this.getOpenclawPath()),
-        env: { ...process.env, NODE_ENV: 'production' }
+      socket.setTimeout(1000);
+      
+      socket.on('connect', () => {
+        socket.destroy();
+        resolve(true); // 端口被占用（服务在运行）
       });
       
-      let output = '';
-      
-      checkProcess.stdout.on('data', (data) => {
-        output += data.toString('utf-8');
+      socket.on('timeout', () => {
+        socket.destroy();
+        resolve(false);
       });
       
-      checkProcess.stderr.on('data', () => {});
+      socket.on('error', () => {
+        resolve(false); // 端口未被占用
+      });
       
-      checkProcess.on('exit', (code) => {
-        if (code === 0 && output) {
-          try {
-            const status = JSON.parse(output);
-            resolve({
-              isRunning: status.running === true,
-              port: status.port || null,
-              pid: status.pid || null
-            });
-          } catch {
-            resolve({ isRunning: false, port: null, pid: null });
-          }
-        } else {
-          resolve({ isRunning: false, port: null, pid: null });
+      socket.connect(port, '127.0.0.1');
+    });
+  }
+
+  async getPidByPort(port) {
+    return new Promise((resolve) => {
+      const { exec } = require('child_process');
+      exec(`netstat -ano | findstr :${port}`, (error, stdout) => {
+        if (error || !stdout) {
+          resolve(null);
+          return;
         }
-      });
-      
-      checkProcess.on('error', () => {
-        resolve({ isRunning: false, port: null, pid: null });
+        
+        // 解析 netstat 输出，找到 LISTENING 状态的进程
+        const lines = stdout.trim().split('\n');
+        for (const line of lines) {
+          if (line.includes('LISTENING')) {
+            const parts = line.trim().split(/\s+/);
+            const pid = parseInt(parts[parts.length - 1]);
+            if (!isNaN(pid)) {
+              resolve(pid);
+              return;
+            }
+          }
+        }
+        resolve(null);
       });
     });
+  }
+
+  async checkGatewayStatus() {
+    // 如果知道端口，直接检测端口是否被占用
+    if (this.port) {
+      const inUse = await this.checkPortInUse(this.port);
+      if (inUse) {
+        const pid = await this.getPidByPort(this.port);
+        return { isRunning: true, port: this.port, pid };
+      }
+      return { isRunning: false, port: null, pid: null };
+    }
+    
+    // 否则尝试检测默认端口 18789
+    const defaultPort = 18789;
+    const inUse = await this.checkPortInUse(defaultPort);
+    if (inUse) {
+      const pid = await this.getPidByPort(defaultPort);
+      return { isRunning: true, port: defaultPort, pid };
+    }
+    return { isRunning: false, port: null, pid: null };
   }
 
   getStatus() {
@@ -242,6 +274,21 @@ class ServiceManager {
     this.isRunning = status.isRunning;
     this.port = status.port;
     return status;
+  }
+
+  async isSetupNeeded() {
+    const fs = require('fs');
+    
+    // 检查项目配置目录下的 openclaw.json 是否存在
+    const configDir = path.join(this.getResourcesPath(), 'config');
+    const configFile = path.join(configDir, 'openclaw.json');
+    
+    // 如果配置文件存在，认为已经初始化过
+    if (fs.existsSync(configFile)) {
+      return false;
+    }
+    
+    return true;
   }
 
   setup() {
@@ -311,15 +358,35 @@ class ServiceManager {
         env: {
           ...process.env,
           NODE_ENV: 'production'
-        },
-        detached: true,
-        stdio: 'ignore'
+        }
       });
 
-      dashboardProcess.unref();
-      
-      this.log('控制台已启动');
-      resolve();
+      let output = '';
+
+      dashboardProcess.stdout.on('data', (data) => {
+        output += data.toString('utf-8');
+        this.log(data.toString('utf-8').trim());
+      });
+
+      dashboardProcess.stderr.on('data', (data) => {
+        output += data.toString('utf-8');
+        this.log(data.toString('utf-8').trim(), 'error');
+      });
+
+      dashboardProcess.on('exit', (code) => {
+        if (code === 0) {
+          this.log('控制台已打开');
+          resolve();
+        } else {
+          this.log(`打开控制台失败，退出码: ${code}`, 'error');
+          reject(new Error(output || `退出码: ${code}`));
+        }
+      });
+
+      dashboardProcess.on('error', (err) => {
+        this.log(`打开控制台失败: ${err.message}`, 'error');
+        reject(err);
+      });
     });
   }
 }

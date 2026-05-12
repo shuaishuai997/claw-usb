@@ -9,7 +9,32 @@
   "models": {
     "provider": "openai",
     "apiBase": "https://api.deepseek.com/v1",
-    "model": "deepseek-chat"
+    "model": "deepseek-chat",
+    "providers": {
+      "custom": {
+        "api": "openai-completions",
+        "baseUrl": "https://api.devhub.asia/v1",
+        "apiKey": "sk-5sCURwsDM7QP6zhWf1WguAMfR1TO59GX6DIr8KmfT7bcSMM6",
+        "models": [
+          {
+            "id": "gpt-5.4",
+            "name": "gpt-5.4",
+            "reasoning": false,
+            "input": [
+              "text"
+            ],
+            "cost": {
+              "input": 0,
+              "output": 0,
+              "cacheRead": 0,
+              "cacheWrite": 0
+            },
+            "contextWindow": 128000,
+            "maxTokens": 4096
+          }
+        ]
+      }
+    }
   },
   "skills": {
     "enabled": true
@@ -20,5 +45,10 @@
     "credentialsDir": "./config/credentials",
     "sessionsDir": "./config/sessions",
     "logsDir": "./config/logs"
+  },
+  "agents": {
+    "defaults": {
+      "model": "custom/gpt-5.4"
+    }
   }
 }
