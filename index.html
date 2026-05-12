@@ -853,8 +853,7 @@
 <body>
   <div class="title-bar">
     <div class="title-bar-left">
-      <div class="logo">O</div>
-      <span class="title">OpenClaw U盘版 v1.1.1</span>
+      <span class="title">OpenClaw U盘版 </span>
       <span class="activation-status" id="activation-status">未激活</span>
     </div>
     <div class="title-bar-right">
@@ -869,9 +868,10 @@
 
   <div class="main-content">
     <div class="header-section">
-      <div class="header-logo">O</div>
+
       <div class="header-title">OpenClaw U盘版</div>
-      <div class="header-subtitle">您的 AI 助手 · 数据安全 U盘 · 拔出即停止</div>
+      <div class="header-subtitle">您的 AI 助手 · 数据安全 U盘</div>
+      <div class="header-subtitle">作者微信:vx-LLOOVVEE_LL</div>
     </div>
 
     <div class="status-card" id="status-card">
@@ -1032,7 +1032,6 @@
     const stopBtn = document.getElementById('stop-btn')
     const apiModal = document.getElementById('api-modal')
     const licenseModal = document.getElementById('license-modal')
-    const toast = document.getElementById('toast')
     const dashboardBtn = document.getElementById('dashboard-btn')
     const activationStatus = document.getElementById('activation-status')
 
@@ -1042,13 +1041,11 @@
     let setupNeeded = false
 
     const FUNCTIONAL_BUTTONS = [
-      'start-btn', 'stop-btn', 'dashboard-btn', 'api-btn', 
-      'license-btn', 'setup-btn', 'restore-btn',
-      'api-save', 'api-cancel', 'test-model-btn', 'simple-test-btn'
+      'start-btn', 'stop-btn', 'dashboard-btn', 'api-btn'
     ]
 
     const SETUP_BUTTONS = [
-      'start-btn', 'stop-btn', 'dashboard-btn', 'api-btn', 'license-btn'
+      'start-btn', 'api-btn', 'license-btn','dashboard-btn','stop-btn'
     ]
 
     function setFunctionalButtonsEnabled(enabled) {
@@ -1108,35 +1105,69 @@
         const btn = document.getElementById(btnId)
         if (btn) btn.style.display = 'none'
       })
+      if (!isActivated) {
+          showActivateButton()
+      }
     }
 
     function showAllButtons() {
-      SETUP_BUTTONS.forEach(btnId => {
-        const btn = document.getElementById(btnId)
-        if (btn) btn.style.display = ''
-      })
+      apiModal.style.display = ''
+      showStartButton();
+      if (isActivated) {
+          hideActivateButton()
+      }
     }
 
     function hideActivateButton() {
-      const activateBtn = document.getElementById('license-activate')
+      const activateBtn = document.getElementById('license-btn')
       if (activateBtn) {
         activateBtn.style.display = 'none'
       }
     }
 
+    function hideStartButton() {
+      const activateBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const dashboardBtn = document.getElementById('dashboard-btn');
+
+      if (activateBtn) {
+        activateBtn.style.display = 'none'
+      }
+      if (stopBtn) {
+        stopBtn.style.display = ''
+      }
+      if (dashboardBtn) {
+        dashboardBtn.style.display = ''
+      }
+    }
+    function showStartButton() {
+      const activateBtn = document.getElementById('start-btn');
+      const stopBtn = document.getElementById('stop-btn');
+      const dashboardBtn = document.getElementById('dashboard-btn');
+      if (activateBtn) {
+        activateBtn.style.display = ''
+      }
+      if (stopBtn) {
+        stopBtn.style.display = 'none'
+      }
+      if (dashboardBtn) {
+        dashboardBtn.style.display = 'none'
+      }
+    }
+    
     function showActivateButton() {
-      const activateBtn = document.getElementById('license-activate')
+      const activateBtn = document.getElementById('license-btn')
       if (activateBtn) {
         activateBtn.style.display = ''
       }
     }
 
     function showToast(message, type = 'info') {
-      toast.textContent = message
-      toast.className = `toast ${type} show`
-      setTimeout(() => {
-        toast.classList.remove('show')
-      }, 3000)
+      // toast.textContent = message
+      // toast.className = `toast ${type} show`
+      // setTimeout(() => {
+      //   toast.classList.remove('show')
+      // }, 3000)
     }
 
     document.getElementById('min-btn').addEventListener('click', () => {
@@ -1242,7 +1273,7 @@
       updateStatus(true)
       document.getElementById('pid-value').textContent = data.pid
       document.getElementById('port-value').textContent = data.port || '3000'
-      showToast('OpenClaw 服务启动成功！', 'success')
+      hideStartButton()
     })
 
     ipcRenderer.on('service-error', (event, error) => {
@@ -1257,7 +1288,8 @@
     })
 
     ipcRenderer.on('service-stopped', () => {
-      updateStatus(false)
+      updateStatus(false);
+      showStartButton()
       showToast('OpenClaw 服务已停止', 'info')
     })
 
@@ -1589,13 +1621,10 @@
     ipcRenderer.on('setup-completed', (event, result) => {
       if (result.success) {
         addLog('[SUCCESS] 一键初始化完成')
-        showToast('一键初始化完成', 'success')
         setupNeeded = false
         hideSetupButton()
         showAllButtons()
-        if (isActivated) {
-          hideActivateButton()
-        }
+
         ipcRenderer.send('check-setup-needed')
         ipcRenderer.send('get-license')
       } else {

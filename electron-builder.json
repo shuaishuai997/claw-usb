@@ -1,5 +1,5 @@
 {
-  "appId": "com.example.openclaw-usb",
+  "appId": "com.openclaw.usb",
   "productName": "OpenClaw U盘版",
   "directories": {
     "output": "dist",
@@ -25,7 +25,8 @@
     "target": "dir",
     "icon": "icon.ico",
     "requestedExecutionLevel": "requireAdministrator",
-    "signAndEditExecutable": false,
+    "signAndEditExecutable": true,
+    "cscKeyPassword": "openclaw-dev",
     "forceCodeSigning": false
   }
 }
