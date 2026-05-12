@@ -7,13 +7,36 @@ const http = require('http');
 class LicenseManager {
   constructor() {
     this.LICENSE_SECRET = 'openclaw-license-secret-2024';
-    this.VERIFY_INTERVAL_MS = 60 * 60 * 1000; // 每小时验证一次
+    this.VERIFY_INTERVAL_MS = 60 * 60 * 1000;
     this.verifyInterval = null;
     this.notifyLicenseInvalid = null;
+    this.licenseDir = null;
   }
 
   getLicensePath() {
-    return path.join(__dirname, '../license.json');
+    let licensePath;
+    
+    if (this.licenseDir) {
+      licensePath = path.join(this.licenseDir, 'license.json');
+    } else if (process.env.APP_DATA_DIR) {
+      licensePath = path.join(process.env.APP_DATA_DIR, 'license.json');
+    } else {
+      const isPackaged = process.env.NODE_ENV === 'production' || 
+                         process.versions.electron && !require('electron').app.isPackaged === false;
+      
+      if (isPackaged && process.versions.electron) {
+        const { app } = require('electron');
+        licensePath = path.join(app.getPath('userData'), 'license.json');
+      } else {
+        licensePath = path.join(__dirname, '../license.json');
+      }
+    }
+    
+    return licensePath;
+  }
+
+  setLicenseDir(dir) {
+    this.licenseDir = dir;
   }
 
   getMachineId() {
@@ -44,7 +67,7 @@ class LicenseManager {
         return crypto.createHash('sha256').update(uuid).digest('hex').slice(0, 32);
       }
     } catch {
-      const fallbackPath = path.join(__dirname, '../.machine-id');
+      const fallbackPath = path.join(this.getLicenseDir(), '.machine-id');
       if (fs.existsSync(fallbackPath)) {
         return fs.readFileSync(fallbackPath, 'utf8').trim();
       }
@@ -52,6 +75,11 @@ class LicenseManager {
       fs.writeFileSync(fallbackPath, id);
       return id;
     }
+  }
+
+  getLicenseDir() {
+    const licensePath = this.getLicensePath();
+    return path.dirname(licensePath);
   }
 
   generateToken(licenseKey, machineId, expiresAt) {
@@ -86,7 +114,7 @@ class LicenseManager {
 
   saveLicense(data) {
     try {
-      const dir = path.dirname(this.getLicensePath());
+      const dir = this.getLicenseDir();
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
       fs.writeFileSync(this.getLicensePath(), JSON.stringify(data, null, 2), 'utf8');
       return true;

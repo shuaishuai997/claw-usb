@@ -1,0 +1,37 @@
+{
+  "appId": "com.example.openclaw-usb",
+  "productName": "OpenClaw U盘版",
+  "directories": {
+    "output": "dist",
+    "buildResources": "."
+  },
+  "electronDist": "node_modules/electron/dist",
+  "files": [
+    "**/*",
+    "!node_modules/*",
+    "!dist/*",
+    "!resources/node/**",
+    "!resources/openclaw/**",
+    "!certs/**",
+    "config/**"
+  ],
+  "extraResources": [
+    {
+      "from": "resources",
+      "to": "resources",
+      "filter": ["**/*"]
+    },
+    {
+      "from": "config",
+      "to": "config",
+      "filter": ["**/*"]
+    }
+  ],
+  "win": {
+    "target": "dir",
+    "icon": "icon.ico",
+    "requestedExecutionLevel": "requireAdministrator",
+    "signAndEditExecutable": false,
+    "forceCodeSigning": false
+  }
+}

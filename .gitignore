@@ -10,7 +10,6 @@ Thumbs.db
 *.log
 .env
 .env.local
-certs/
 *.local
 
 # Maintainer-only / local docs (not published on GitHub)

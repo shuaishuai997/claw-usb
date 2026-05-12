@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, Tray, ipcMain } = require('electron')
+const { app, BrowserWindow, ipcMain } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const ServiceManager = require('./services/serviceManager')
@@ -6,7 +6,6 @@ const ConfigManager = require('./services/configManager')
 const LicenseManager = require('./services/licenseManager')
 
 let mainWindow
-let tray = null
 const serviceManager = new ServiceManager()
 const configManager = new ConfigManager()
 const licenseManager = new LicenseManager()
@@ -29,51 +28,9 @@ function createWindow() {
 
   mainWindow.loadFile('index.html')
 
-  mainWindow.on('minimize', (e) => {
-    e.preventDefault()
-    mainWindow.hide()
-  })
-
   mainWindow.on('close', (e) => {
-    if (!app.isQuiting) {
-      e.preventDefault()
-      mainWindow.hide()
-    }
-    return false
+    serviceManager.stop()
   })
-}
-
-function createTray() {
-  tray = new Tray(path.join(__dirname, 'icon.ico'))
-  updateTrayMenu()
-  tray.setToolTip('OpenClaw U盘版')
-  tray.on('click', () => {
-    mainWindow.show()
-  })
-}
-
-function updateTrayMenu() {
-  const status = serviceManager.getStatus()
-  const contextMenu = Menu.buildFromTemplate([
-    { label: '显示窗口', click: () => mainWindow.show() },
-    { 
-      label: status.isRunning ? '停止服务' : '启动服务',
-      click: async () => {
-        if (status.isRunning) {
-          await serviceManager.stop()
-        } else {
-          await serviceManager.start()
-        }
-        updateTrayMenu()
-      }
-    },
-    { label: '退出', click: () => {
-      app.isQuiting = true
-      serviceManager.stop()
-      app.quit()
-    }}
-  ])
-  tray.setContextMenu(contextMenu)
 }
 
 function setupServiceCallbacks() {
@@ -87,21 +44,18 @@ function setupServiceCallbacks() {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('service-started', data)
     }
-    updateTrayMenu()
   })
 
   serviceManager.setErrorCallback((error) => {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('service-error', error)
     }
-    updateTrayMenu()
   })
 
   serviceManager.setStopCallback(() => {
     if (mainWindow && mainWindow.webContents) {
       mainWindow.webContents.send('service-stopped')
     }
-    updateTrayMenu()
   })
 }
 
@@ -292,7 +246,6 @@ ipcMain.on('apply-model-config', (event, config) => {
 
 app.whenReady().then(() => {
   createWindow()
-  createTray()
   setupServiceCallbacks()
   
   licenseManager.init(() => {
