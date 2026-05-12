@@ -7,11 +7,24 @@ class ServiceManager {
     this.isRunning = false;
     this.logCallback = null;
     this.port = null;
-    this.nodePath = path.join(__dirname, '../resources/node/node.exe');
-    this.openclawPath = path.join(__dirname, '../resources/openclaw/openclaw.mjs');
     this.startCallback = null;
     this.errorCallback = null;
     this.stopCallback = null;
+  }
+
+  getResourcesPath() {
+    if (process.resourcesPath) {
+      return path.join(__dirname, '../resources');
+    }
+    return path.join(__dirname, '../');
+  }
+
+  getNodePath() {
+    return path.join(this.getResourcesPath(), '/node/node.exe');
+  }
+
+  getOpenclawPath() {
+    return path.join(this.getResourcesPath(), '/openclaw/openclaw.mjs');
   }
 
   setLogCallback(callback) {
@@ -46,239 +59,173 @@ class ServiceManager {
         return;
       }
 
-      this.port = null;
       this.log('正在启动 OpenClaw 服务...');
-      this.log(`Node 路径: ${this.nodePath}`);
-      this.log(`OpenClaw 路径: ${this.openclawPath}`);
+
+      const args = [this.getOpenclawPath(), 'gateway', 'run'];
       
-      const args = [this.openclawPath, 'gateway'];
-      
-      this.process = spawn(this.nodePath, args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: path.join(__dirname, '../resources/openclaw'),
+      this.log(`启动命令: ${this.getNodePath()} ${args.join(' ')}`);
+
+      this.process = spawn(this.getNodePath(), args, {
+        cwd: path.dirname(this.getOpenclawPath()),
         env: {
           ...process.env,
-          PATH: path.dirname(this.nodePath) + ';' + process.env.PATH,
-          OPENCLAW_CONFIG_PATH: path.join(__dirname, '../config/openclaw.json'),
-          OPENCLAW_STATE_DIR: path.join(__dirname, '../config')
-        },
-        shell: false
+          NODE_ENV: 'production'
+        }
       });
 
-      const startupTimeout = setTimeout(() => {
-        if (!this.isRunning && this.process) {
-          this.log('服务启动超时', 'error');
-          this.process.kill();
-          this.process = null;
-          this.isRunning = false;
-          if (this.errorCallback) {
-            this.errorCallback('服务启动超时');
-          }
-          reject(new Error('服务启动超时'));
+      this.process.on('error', (err) => {
+        this.log(`服务启动失败: ${err.message}`, 'error');
+        this.isRunning = false;
+        this.process = null;
+        if (this.errorCallback) {
+          this.errorCallback(err.message);
         }
-      }, 15000);
+        reject(err);
+      });
+
+      this.process.on('exit', (code) => {
+        if (this.isRunning) {
+          this.log(`服务异常退出，退出码: ${code}`, 'error');
+          this.isRunning = false;
+          this.process = null;
+          if (this.errorCallback) {
+            this.errorCallback(`服务异常退出，退出码: ${code}`);
+          }
+        }
+      });
 
       this.process.stdout.on('data', (data) => {
-        const output = data.toString();
-        const lines = output.split('\n');
-        lines.forEach(line => {
-          const trimmedLine = line.trim();
-          if (trimmedLine) {
-            this.log(trimmedLine);
-            
-            const portMatch = trimmedLine.match(/https?:\/\/127\.0\.0\.1:(\d+)/i);
-            if (portMatch) {
-              this.port = parseInt(portMatch[1]);
-              this.log(`检测到服务端口: ${this.port}`);
-            }
-          }
-        });
-
-        if (output.includes('starting HTTP server') || output.includes('host mounted at')) {
-          clearTimeout(startupTimeout);
-          if (!this.port) {
-            this.port = 18789;
-          }
-          this.isRunning = true;
-          this.log('OpenClaw 服务启动成功');
-          if (this.startCallback) {
-            this.startCallback({ pid: this.process.pid, port: this.port });
-          }
-          resolve({ pid: this.process.pid, port: this.port });
+        const output = data.toString('utf-8').trim();
+        if (output) {
+          this.log(output);
         }
       });
 
       this.process.stderr.on('data', (data) => {
-        const output = data.toString().trim();
-        this.log(output, 'error');
-        
-        const portMatch = output.match(/port (\d+)/i);
-        if (portMatch) {
-          this.port = parseInt(portMatch[1]);
-        }
-
-        if (output.includes('EADDRINUSE') || output.includes('port is already in use')) {
-          clearTimeout(startupTimeout);
-          const error = new Error(`端口 ${this.port || '未知'} 已被占用`);
-          this.isRunning = false;
-          if (this.errorCallback) {
-            this.errorCallback(error.message);
-          }
-          reject(error);
+        const output = data.toString('utf-8').trim();
+        if (output) {
+          this.log(output, 'error');
         }
       });
 
-      this.process.on('close', (code) => {
-        clearTimeout(startupTimeout);
-        const wasRunning = this.isRunning;
-        this.isRunning = false;
-        this.process = null;
-        this.port = null;
-        if (code !== 0) {
-          this.log(`服务异常退出，退出码: ${code}`, 'error');
-          if (wasRunning && this.errorCallback) {
-            this.errorCallback(`服务异常退出，退出码: ${code}`);
+      // 轮询检测服务是否启动成功
+      const checkInterval = setInterval(async () => {
+        const status = await this.checkGatewayStatus();
+        if (status.isRunning) {
+          clearInterval(checkInterval);
+          clearTimeout(timeout);
+          this.port = status.port;
+          this.isRunning = true;
+          this.log(`服务已启动，端口: ${this.port}`);
+          if (this.startCallback) {
+            this.startCallback({ port: this.port, pid: status.pid });
           }
-        } else {
-          this.log('服务已停止', 'warn');
-          if (this.stopCallback) {
-            this.stopCallback();
-          }
+          resolve({ port: this.port, pid: status.pid });
         }
-      });
+      }, 1000);
 
-      this.process.on('error', (error) => {
-        clearTimeout(startupTimeout);
-        this.log(`启动失败: ${error.message}`, 'error');
-        this.isRunning = false;
-        this.process = null;
+      // 30秒超时
+      const timeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        this.log('服务启动超时', 'error');
         if (this.errorCallback) {
-          this.errorCallback(error.message);
+          this.errorCallback('服务启动超时');
         }
-        reject(error);
+        reject(new Error('服务启动超时'));
+      }, 30000);
+    });
+  }
+
+  async killProcessTree(pid) {
+    return new Promise((resolve) => {
+      // Windows 下用 taskkill 杀进程树
+      const killProcess = spawn('taskkill', ['/pid', String(pid), '/f', '/t'], {
+        windowsHide: true
       });
+      
+      killProcess.on('exit', () => resolve());
+      killProcess.on('error', () => resolve());
+      
+      // 超时保护
+      setTimeout(() => {
+        try { killProcess.kill(); } catch {}
+        resolve();
+      }, 5000);
     });
   }
 
   stop() {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       if (!this.isRunning || !this.process) {
         resolve();
         return;
       }
 
       this.log('正在停止 OpenClaw 服务...');
+
+      const pid = this.process.pid;
       
-      const killTimeout = setTimeout(() => {
-        if (this.process && !this.process.killed) {
-          this.log('强制终止服务...', 'warn');
-          this.process.kill('SIGKILL');
-        }
-      }, 3000);
-
-      this.process.on('close', () => {
-        clearTimeout(killTimeout);
-        this.isRunning = false;
-        this.process = null;
-        this.port = null;
-        this.log('OpenClaw 服务已停止');
-        if (this.stopCallback) {
-          this.stopCallback();
-        }
-        resolve();
-      });
-
-      if (process.platform === 'win32') {
-        this.process.kill('SIGINT');
-      } else {
-        this.process.kill('SIGTERM');
+      // 先用 taskkill 杀进程树（包括所有子进程）
+      if (pid) {
+        await this.killProcessTree(pid);
       }
+
+      // 确保进程已停止
+      if (this.process) {
+        try {
+          this.process.kill('SIGTERM');
+        } catch (err) {
+          // ignore
+        }
+      }
+
+      this.log('服务已停止');
+      this.isRunning = false;
+      this.process = null;
+      this.port = null;
+      if (this.stopCallback) {
+        this.stopCallback();
+      }
+      resolve();
     });
   }
 
-  setup() {
-    return new Promise((resolve, reject) => {
-      this.log('正在执行一键初始化...');
+  async checkGatewayStatus() {
+    return new Promise((resolve) => {
+      const args = [this.getOpenclawPath(), 'gateway', 'status', '--json'];
       
-      const args = [this.openclawPath, 'onboard', '--non-interactive', '--mode', 'local', '--accept-risk', '--skip-daemon', '--skip-skills', '--skip-health'];
+      const checkProcess = spawn(this.getNodePath(), args, {
+        cwd: path.dirname(this.getOpenclawPath()),
+        env: { ...process.env, NODE_ENV: 'production' }
+      });
       
-      const setupProcess = spawn(this.nodePath, args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: path.join(__dirname, '../resources/openclaw'),
-        env: {
-          ...process.env,
-          PATH: path.dirname(this.nodePath) + ';' + process.env.PATH,
-          OPENCLAW_CONFIG_PATH: path.join(__dirname, '../config/openclaw.json'),
-          OPENCLAW_STATE_DIR: path.join(__dirname, '../config')
-        },
-        shell: false
+      let output = '';
+      
+      checkProcess.stdout.on('data', (data) => {
+        output += data.toString('utf-8');
       });
-
-      setupProcess.stdout.on('data', (data) => {
-        const output = data.toString().trim();
-        this.log(output);
-      });
-
-      setupProcess.stderr.on('data', (data) => {
-        const output = data.toString().trim();
-        this.log(output, 'error');
-      });
-
-      setupProcess.on('close', (code) => {
-        if (code === 0) {
-          this.log('一键初始化完成');
-          resolve();
+      
+      checkProcess.stderr.on('data', () => {});
+      
+      checkProcess.on('exit', (code) => {
+        if (code === 0 && output) {
+          try {
+            const status = JSON.parse(output);
+            resolve({
+              isRunning: status.running === true,
+              port: status.port || null,
+              pid: status.pid || null
+            });
+          } catch {
+            resolve({ isRunning: false, port: null, pid: null });
+          }
         } else {
-          this.log(`初始化失败，退出码: ${code}`, 'error');
-          reject(new Error(`初始化失败`));
+          resolve({ isRunning: false, port: null, pid: null });
         }
       });
-
-      setupProcess.on('error', (error) => {
-        this.log(`初始化失败: ${error.message}`, 'error');
-        reject(error);
-      });
-    });
-  }
-
-  openDashboard() {
-    return new Promise((resolve, reject) => {
-      if (!this.isRunning) {
-        reject(new Error('请先启动服务'));
-        return;
-      }
-
-      this.log('正在打开网页端控制面板...');
       
-      const args = [this.openclawPath, 'dashboard'];
-      
-      const dashboardProcess = spawn(this.nodePath, args, {
-        stdio: ['pipe', 'pipe', 'pipe'],
-        cwd: path.join(__dirname, '../resources/openclaw'),
-        env: {
-          ...process.env,
-          PATH: path.dirname(this.nodePath) + ';' + process.env.PATH,
-          OPENCLAW_CONFIG_PATH: path.join(__dirname, '../config/openclaw.json'),
-          OPENCLAW_STATE_DIR: path.join(__dirname, '../config')
-        },
-        shell: false,
-        detached: true,
-        windowsHide: true
-      });
-
-      dashboardProcess.on('close', (code) => {
-        if (code === 0) {
-          this.log('网页端控制面板已打开');
-          resolve();
-        } else {
-          this.log(`打开控制面板失败，退出码: ${code}`, 'error');
-          reject(new Error(`打开控制面板失败`));
-        }
-      });
-
-      dashboardProcess.on('error', (error) => {
-        this.log(`打开控制面板失败: ${error.message}`, 'error');
-        reject(error);
+      checkProcess.on('error', () => {
+        resolve({ isRunning: false, port: null, pid: null });
       });
     });
   }
@@ -286,25 +233,94 @@ class ServiceManager {
   getStatus() {
     return {
       isRunning: this.isRunning,
-      pid: this.process ? this.process.pid : null,
       port: this.port
     };
   }
 
-  async isSetupNeeded() {
-    const fs = require('fs');
-    const configPath = path.join(__dirname, '../config/openclaw.json');
-    
-    try {
-      if (fs.existsSync(configPath)) {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-        return !config.models || !config.models.providers || Object.keys(config.models.providers).length === 0;
-      }
-      return true;
-    } catch (error) {
-      this.log(`检查初始化状态失败: ${error.message}`, 'error');
-      return true;
-    }
+  async refreshStatus() {
+    const status = await this.checkGatewayStatus();
+    this.isRunning = status.isRunning;
+    this.port = status.port;
+    return status;
+  }
+
+  setup() {
+    return new Promise((resolve, reject) => {
+      this.log('正在执行一键初始化...');
+      
+      const args = [
+        this.getOpenclawPath(), 
+        'onboard', 
+        '--non-interactive', 
+        '--mode', 'local', 
+        '--accept-risk', 
+        '--skip-daemon', 
+        '--skip-skills', 
+        '--skip-health'
+      ];
+
+      this.log(`初始化命令: ${this.getNodePath()} ${args.join(' ')}`);
+
+      const setupProcess = spawn(this.getNodePath(), args, {
+        cwd: path.dirname(this.getOpenclawPath()),
+        env: {
+          ...process.env,
+          NODE_ENV: 'production'
+        }
+      });
+
+      let output = '';
+
+      setupProcess.on('error', (err) => {
+        this.log(`初始化失败: ${err.message}`, 'error');
+        reject(err);
+      });
+
+      setupProcess.stdout.on('data', (data) => {
+        output += data.toString('utf-8');
+        this.log(data.toString('utf-8').trim());
+      });
+
+      setupProcess.stderr.on('data', (data) => {
+        output += data.toString('utf-8');
+        this.log(data.toString('utf-8').trim(), 'error');
+      });
+
+      setupProcess.on('exit', (code) => {
+        if (code === 0) {
+          this.log('一键初始化完成');
+          resolve(output);
+        } else {
+          this.log(`初始化失败，退出码: ${code}`, 'error');
+          reject(new Error(`初始化失败，退出码: ${code}`));
+        }
+      });
+    });
+  }
+
+  openDashboard() {
+    return new Promise((resolve, reject) => {
+      this.log('正在打开 OpenClaw 控制台...');
+      
+      const args = [this.getOpenclawPath(), 'dashboard'];
+
+      this.log(`控制台命令: ${this.getNodePath()} ${args.join(' ')}`);
+
+      const dashboardProcess = spawn(this.getNodePath(), args, {
+        cwd: path.dirname(this.getOpenclawPath()),
+        env: {
+          ...process.env,
+          NODE_ENV: 'production'
+        },
+        detached: true,
+        stdio: 'ignore'
+      });
+
+      dashboardProcess.unref();
+      
+      this.log('控制台已启动');
+      resolve();
+    });
   }
 }
 

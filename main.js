@@ -28,8 +28,13 @@ function createWindow() {
 
   mainWindow.loadFile('index.html')
 
-  mainWindow.on('close', (e) => {
-    serviceManager.stop()
+  mainWindow.on('close', async (e) => {
+    e.preventDefault()
+    await serviceManager.stop()
+    if (mainWindow) {
+      mainWindow.destroy()
+      mainWindow = null
+    }
   })
 }
 
@@ -262,8 +267,8 @@ app.whenReady().then(() => {
   })
 })
 
-app.on('window-all-closed', () => {
-  serviceManager.stop()
+app.on('window-all-closed', async () => {
+  await serviceManager.stop()
   if (process.platform !== 'darwin') {
     app.quit()
   }
