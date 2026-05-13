@@ -898,24 +898,24 @@
     </div>
 
     <div class="bottom-actions">
-      <button class="btn-large btn-danger" id="stop-btn" disabled>
+      <button class="btn-large btn-danger" id="stop-btn" disabled style="display: none;">
         <span class="btn-icon">⏹</span>
         <span class="btn-text">停止服务</span>
       </button>
-      <button class="btn-large btn-success" id="start-btn">
+      <button class="btn-large btn-success" id="start-btn" style="display: none;">
         <span class="btn-icon">▶</span>
         <span class="btn-text">启动服务</span>
       </button>
-     <button class="btn-large btn-info" id="dashboard-btn">
+     <button class="btn-large btn-info" id="dashboard-btn" style="display: none;">
         <span class="btn-icon">🌐</span>
         <span class="btn-text">打开龙虾控制面板</span>
       </button>
-      <button class="btn-large btn-secondary" id="api-btn">
+      <button class="btn-large btn-secondary" id="api-btn" style="display: none;">
         <span class="btn-icon">🔑</span>
         <span class="btn-text">API Key</span>
       </button>
    
-      <button class="btn-large btn-danger" id="license-btn">
+      <button class="btn-large btn-danger" id="license-btn" >
         <span class="btn-icon">🔐</span>
         <span class="btn-text">去激活</span>
       </button>
@@ -1098,6 +1098,7 @@
       if (setupBtn) {
         setupBtn.style.display = 'none'
       }
+     
     }
 
     function showSetupRequired() {
@@ -1105,19 +1106,16 @@
         const btn = document.getElementById(btnId)
         if (btn) btn.style.display = 'none'
       })
-      if (!isActivated) {
-          showActivateButton()
-      }
+    
     }
 
     function showAllButtons() {
-      document.getElementById('api-btn').style.display = ''
       showStartButton();
-      if (isActivated) {
-          hideActivateButton()
-      }
+       document.getElementById('api-btn').style.display = ''
     }
-
+    function hideAllButtons() {
+      showSetupRequired();
+    }
     function hideActivateButton() {
       const activateBtn = document.getElementById('license-btn')
       if (activateBtn) {
@@ -1160,6 +1158,7 @@
       if (activateBtn) {
         activateBtn.style.display = ''
       }
+      
     }
 
     function showToast(message, type = 'info') {
@@ -1254,7 +1253,6 @@
 
     ipcRenderer.on('service-status', (event, status) => {
       updateStatus(status.isRunning)
-      checkSetupNeeded()
       if (status.pid) {
         document.getElementById('pid-value').textContent = status.pid
       }
@@ -1503,7 +1501,6 @@
     })
 
     document.getElementById('license-btn').addEventListener('click', () => {
-      ipcRenderer.send('get-license')
       licenseModal.classList.add('show')
     })
 
@@ -1520,6 +1517,7 @@
       if (!needed) {
         hideSetupButton()
       } else {
+        document.getElementById('setup-btn').style.display = ''
         showSetupRequired()
       }
     })
@@ -1531,6 +1529,7 @@
       const activationStatus = document.getElementById('activation-status')
       
       if (license.activated) {
+        hideActivateButton();
         isActivated = true
         statusEl.className = 'license-value active'
         statusEl.textContent = '已激活'
@@ -1539,7 +1538,10 @@
         setFunctionalButtonsEnabled(true)
         activationStatus.textContent = '已激活'
         activationStatus.classList.add('active')
-        hideActivateButton()
+        
+        setTimeout(() => {
+          checkSetupNeeded();
+        }, 1500);
       } else {
         isActivated = false
         statusEl.className = 'license-value inactive'
@@ -1549,7 +1551,10 @@
         setFunctionalButtonsEnabled(false)
         activationStatus.textContent = '未激活'
         activationStatus.classList.remove('active')
-        showActivateButton()
+      
+        hideAllButtons();
+        hideSetupButton();
+        showActivateButton();
       }
     })
 
@@ -1584,19 +1589,13 @@
         setTimeout(() => {
           successMsg.classList.remove('show')
           licenseModal.classList.remove('show')
-        }, 1500)
-        showToast(result.message || '授权激活成功！', 'success')
+        }, 1500);
       } else {
         showToast(result.message || '激活失败', 'error')
       }
     })
 
-    ipcRenderer.on('license-invalid', () => {
-      isActivated = false
-      setFunctionalButtonsEnabled(false)
-      showActivationRequired()
-      showToast('授权验证失败，请重新激活', 'error')
-    })
+
 
     document.getElementById('dashboard-btn').addEventListener('click', () => {
       addLog('[INFO] 正在打开网页端控制面板...')
@@ -1614,6 +1613,11 @@
     })
 
     document.getElementById('setup-btn').addEventListener('click', () => {
+      if (!isActivated) {
+        addLog('[ERROR] 请先激活许可证')
+    
+        return
+      }
       addLog('[INFO] 正在执行一键初始化...')
       ipcRenderer.send('setup')
     })
@@ -1626,7 +1630,6 @@
         showAllButtons()
 
         ipcRenderer.send('check-setup-needed')
-        ipcRenderer.send('get-license')
       } else {
         addLog(`[ERROR] 初始化失败：${result.error}`)
         showToast(`初始化失败：${result.error}`, 'error')
@@ -1634,7 +1637,7 @@
     })
 
     initProviderSelect()
-    setFunctionalButtonsEnabled(false)
+  
     ipcRenderer.send('get-license')
     addLog('[INFO] OpenClaw U 盘版 v1.1.1 已启动')
   </script>
