@@ -13,6 +13,7 @@
     "!resources/node/**",
     "!resources/openclaw/**",
     "!certs/**",
+    "!config/**",
     "!locales/!(zh-CN)/**"
   ],
   "extraResources": [

@@ -316,7 +316,8 @@ class ServiceManager {
         '--accept-risk', 
         '--skip-daemon', 
         '--skip-skills', 
-        '--skip-health'
+        '--skip-health',
+        '--workspace', path.join(this.getConfigDir(), 'workspace')
       ];
 
       this.log(`初始化命令: ${this.getNodePath()} ${args.join(' ')}`);
