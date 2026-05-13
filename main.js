@@ -14,7 +14,7 @@ const licenseManager = new LicenseManager()
 function createWindow() {
   mainWindow = new BrowserWindow({
     width: 500,
-    height: 860,
+    height: 720,
     minWidth: 500,
     minHeight: 600,
     title: 'OpenClaw U盘版 vx-LLOOVVEE_LL',
