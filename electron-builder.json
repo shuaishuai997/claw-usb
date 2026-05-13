@@ -12,7 +12,8 @@
     "!dist/*",
     "!resources/node/**",
     "!resources/openclaw/**",
-    "!certs/**"
+    "!certs/**",
+    "!locales/!(zh-CN)/**"
   ],
   "extraResources": [
     {

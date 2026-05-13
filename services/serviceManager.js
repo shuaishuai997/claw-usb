@@ -25,8 +25,7 @@ class ServiceManager {
   }
 
   getNodePath() {
-    // 用系统 node
-    return 'node';
+   return path.join(this.getResourcesPath(), '/node/node.exe');
   }
 
   getOpenclawPath() {
