@@ -1,10 +1,7 @@
 node_modules
 dist
-config
-build/*
-!build/installer.nsh
-resources/node/
-resources/openclaw/
+config/
+resources/
 .DS_Store
 Thumbs.db
 *.log
@@ -12,15 +9,6 @@ Thumbs.db
 .env.local
 *.local
 
-# Maintainer-only / local docs (not published on GitHub)
-GitHub-guide.md
-INSTALLER_BLACKSCREEN_POSTMORTEM.zh-CN.md
-docs/
-
-# Scratch & temp
-tmp/
-temp/
-.temp/
 
 # IDE & local agent tooling
 .vscode/
@@ -43,6 +31,3 @@ pnpm-debug.log*
 .parcel-cache/
 .cache/
 
-# OS / editor swap
-*.swp
-*~
