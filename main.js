@@ -13,10 +13,10 @@ const licenseManager = new LicenseManager()
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 500,
-    height: 720,
-    minWidth: 500,
-    minHeight: 600,
+    width: 480,
+    height: 820,
+    minWidth: 480,
+    minHeight: 700,
     title: 'OpenClaw U盘版 vx-LLOOVVEE_LL',
     icon: path.join(__dirname, 'icon.ico'),
     frame: false,

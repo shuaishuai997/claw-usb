@@ -1,0 +1,77 @@
+{
+  "models": {
+    "mode": "merge",
+    "providers": {
+      "cherry-silicon": {
+        "baseUrl": "https://api.siliconflow.cn",
+        "apiKey": "sk-tnjyexrfxxgsdcolavahdhpwrwiczgzzimuscoxehedrtlkf",
+        "api": "anthropic-messages",
+        "models": [
+          {
+            "id": "BAAI/bge-m3",
+            "name": "BAAI/bge-m3",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/moonshotai/Kimi-K2.6",
+            "name": "Pro/moonshotai/Kimi-K2.6",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/zai-org/GLM-4.7",
+            "name": "Pro/zai-org/GLM-4.7",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/deepseek-ai/DeepSeek-V3.2",
+            "name": "Pro/deepseek-ai/DeepSeek-V3.2",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/deepseek-ai/DeepSeek-V3.1-Terminus",
+            "name": "Pro/deepseek-ai/DeepSeek-V3.1-Terminus",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/deepseek-ai/DeepSeek-R1",
+            "name": "Pro/deepseek-ai/DeepSeek-R1",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/moonshotai/Kimi-K2.5",
+            "name": "Pro/moonshotai/Kimi-K2.5",
+            "contextWindow": 128000
+          },
+          {
+            "id": "deepseek-ai/DeepSeek-V4-Flash",
+            "name": "deepseek-ai/DeepSeek-V4-Flash",
+            "contextWindow": 128000
+          },
+          {
+            "id": "Pro/BAAI/bge-reranker-v2-m3",
+            "name": "Pro/BAAI/bge-reranker-v2-m3",
+            "contextWindow": 128000
+          }
+        ],
+        "authHeader": true
+      }
+    }
+  },
+  "gateway": {
+    "mode": "local",
+    "port": 18790,
+    "auth": {
+      "token": "KUDuKEhcbXUti3mDfCTycF6gzvDRez3T"
+    },
+    "controlUi": {
+      "allowInsecureAuth": true
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "cherry-silicon/Pro/deepseek-ai/DeepSeek-V3.1-Terminus"
+      }
+    }
+  }
+}
