@@ -28,9 +28,6 @@ claw-usb/
 │   ├── serviceManager.js   # 服务管理
 │   ├── configManager.js    # 配置管理
 │   └── licenseManager.js   # 许可证管理
-├── resources/
-│   ├── openclaw/        # OpenClaw 运行时
-│   └── node/            # Node.js 运行时
 └── config/              # 配置文件目录（运行时生成）
 ```
 
