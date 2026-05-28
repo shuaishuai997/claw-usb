@@ -1020,8 +1020,6 @@
     </div>
   </div>
 
-
-
   <script>
     const { ipcRenderer } = require('electron')
 
@@ -1539,6 +1537,8 @@
         setFunctionalButtonsEnabled(true)
         activationStatus.textContent = '已激活'
         activationStatus.classList.add('active')
+        
+        showAllButtons();
         
         setTimeout(() => {
           checkSetupNeeded();

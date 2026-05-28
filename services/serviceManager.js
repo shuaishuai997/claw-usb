@@ -10,12 +10,13 @@ class ServiceManager {
     this.startCallback = null;
     this.errorCallback = null;
     this.stopCallback = null;
+    this.deviceApprovalTimer = null;
   }
 
   getResourcesPath() {
-    if (process.resourcesPath) {
-      return process.resourcesPath;
-    }
+    // if (process.resourcesPath) {
+    //   return process.resourcesPath;
+    // }
     return path.join(__dirname, '../resources');
   }
 
@@ -134,6 +135,8 @@ class ServiceManager {
             });
           }
           
+          this.startDeviceApprovalWatcher();
+          
           resolve({
             success: true,
             pid: pid,
@@ -235,6 +238,8 @@ class ServiceManager {
     this.process = null;
     this.isRunning = false;
     this.port = null;
+
+    this.stopDeviceApprovalWatcher();
 
     if (this.stopCallback) {
       this.stopCallback();
@@ -396,6 +401,136 @@ class ServiceManager {
         reject(err);
       });
     });
+  }
+
+  listPendingDevices() {
+    return new Promise((resolve) => {
+      const child = spawn(this.getNodePath(), [this.getOpenclawPath(), 'devices', 'list'], {
+        cwd: path.dirname(this.getOpenclawPath()),
+        env: this.getEnv(),
+        windowsHide: true
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+
+      const timer = setTimeout(() => {
+        child.kill('SIGTERM');
+        resolve({ devices: [] });
+      }, 30000);
+
+      child.on('close', () => {
+        clearTimeout(timer);
+        try {
+          const combined = stdout.trim() || stderr.trim();
+          const parsed = JSON.parse(combined);
+          if (Array.isArray(parsed)) {
+            const devices = parsed.map((item) => ({
+              id: String(item.id || ''),
+              name: typeof item.name === 'string' ? item.name : undefined
+            })).filter((d) => d.id);
+            resolve({ devices });
+          } else {
+            resolve({ devices: [] });
+          }
+        } catch {
+          resolve({ devices: [] });
+        }
+      });
+
+      child.on('error', () => {
+        clearTimeout(timer);
+        resolve({ devices: [] });
+      });
+    });
+  }
+
+  approveDevice(deviceId) {
+    return new Promise((resolve) => {
+      const trimmed = deviceId.trim();
+      if (!trimmed) {
+        resolve({ ok: false, message: '设备ID不能为空' });
+        return;
+      }
+
+      const child = spawn(this.getNodePath(), [this.getOpenclawPath(), 'devices', 'approve', trimmed], {
+        cwd: path.dirname(this.getOpenclawPath()),
+        env: this.getEnv(),
+        windowsHide: true
+      });
+
+      let stdout = '';
+      let stderr = '';
+
+      child.stdout.on('data', (chunk) => { stdout += chunk.toString(); });
+      child.stderr.on('data', (chunk) => { stderr += chunk.toString(); });
+
+      const timer = setTimeout(() => {
+        child.kill('SIGTERM');
+        resolve({ ok: false, message: '设备授权超时' });
+      }, 30000);
+
+      child.on('close', (code) => {
+        clearTimeout(timer);
+        const combined = [stdout, stderr].filter(Boolean).join('\n').trim();
+        resolve({
+          ok: code === 0,
+          message: combined || undefined
+        });
+      });
+
+      child.on('error', (err) => {
+        clearTimeout(timer);
+        resolve({ ok: false, message: err.message });
+      });
+    });
+  }
+
+  async autoApprovePendingDevices() {
+    try {
+      const { devices } = await this.listPendingDevices();
+      if (devices.length === 0) {
+        return;
+      }
+
+      this.log(`检测到 ${devices.length} 个待配对设备`);
+      for (const device of devices) {
+        this.log(`正在自动授权设备: ${device.id}${device.name ? ` (${device.name})` : ''}`);
+        const result = await this.approveDevice(device.id);
+        if (result.ok) {
+          this.log(`设备授权成功: ${device.id}`);
+          if (this.deviceApprovalTimer) {
+            clearInterval(this.deviceApprovalTimer);
+            this.deviceApprovalTimer = null;
+            this.log('设备授权监听器已停止 - 所有设备已授权');
+          }
+        } else {
+          this.log(`设备授权失败 ${device.id}: ${result.message || '未知错误'}`, 'error');
+        }
+      }
+    } catch (err) {
+      this.log(`设备自动授权过程中出错: ${err.message}`, 'error');
+    }
+  }
+
+  startDeviceApprovalWatcher() {
+    if (this.deviceApprovalTimer) return;
+    this.log('启动设备授权监听器');
+    this.autoApprovePendingDevices();
+    this.deviceApprovalTimer = setInterval(() => {
+      this.autoApprovePendingDevices();
+    }, 5000);
+  }
+
+  stopDeviceApprovalWatcher() {
+    if (this.deviceApprovalTimer) {
+      clearInterval(this.deviceApprovalTimer);
+      this.deviceApprovalTimer = null;
+      this.log('设备授权监听器已停止');
+    }
   }
 }
 

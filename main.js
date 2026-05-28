@@ -5,6 +5,8 @@ const ServiceManager = require('./services/serviceManager')
 const ConfigManager = require('./services/configManager')
 const LicenseManager = require('./services/licenseManager')
 
+console.log('[DEV] NODE_ENV:', process.env.NODE_ENV)
+
 let mainWindow
 let isQuitting = false
 const serviceManager = new ServiceManager()

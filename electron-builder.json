@@ -24,11 +24,32 @@
     }
   ],
   "win": {
-    "target": "dir",
+    "target": [
+      {
+        "target": "nsis",
+        "arch": ["x64"]
+      }
+    ],
     "icon": "icon.ico",
     "requestedExecutionLevel": "requireAdministrator",
     "signAndEditExecutable": true,
     "cscKeyPassword": "openclaw-dev",
-    "forceCodeSigning": false
+    "forceCodeSigning": false,
+    "artifactName": "${productName}-Setup-${version}.${ext}"
+  },
+  "nsis": {
+    "oneClick": false,
+    "perMachine": false,
+    "allowToChangeInstallationDirectory": true,
+    "displayLanguageSelector": false,
+    "installerLanguages": ["zh_CN"],
+    "installerIcon": "icon.ico",
+    "uninstallerIcon": "icon.ico",
+    "license": null,
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "OpenClaw U盘版",
+    "runAfterFinish": true,
+    "deleteAppDataOnUninstall": false
   }
 }
