@@ -9,7 +9,7 @@ Thumbs.db
 .env
 .env.local
 *.local
-
+services/licenseManager.js
 
 # IDE & local agent tooling
 .vscode/
