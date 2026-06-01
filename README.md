@@ -26,8 +26,7 @@ claw-usb/
 ├── electron-builder.json # 打包配置
 ├── services/
 │   ├── serviceManager.js   # 服务管理
-│   ├── configManager.js    # 配置管理
-│   └── licenseManager.js   # 许可证管理
+│   └── configManager.js    # 配置管理
 └── config/              # 配置文件目录（运行时生成）
 ```
 
