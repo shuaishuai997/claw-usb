@@ -21,15 +21,10 @@ class LicenseManager {
     } else if (process.env.APP_DATA_DIR) {
       licensePath = path.join(process.env.APP_DATA_DIR, 'license.json');
     } else {
-      const isPackaged = process.env.NODE_ENV === 'production' || 
-                         process.versions.electron && !require('electron').app.isPackaged === false;
-      
-      if (isPackaged && process.versions.electron) {
-        const { app } = require('electron');
-        licensePath = path.join(app.getPath('userData'), 'license.json');
-      } else {
-        licensePath = path.join(__dirname, '../license.json');
-      }
+      const exePath = process.versions.electron 
+        ? require('electron').app.getPath('exe') 
+        : process.execPath;
+      licensePath = path.join(path.dirname(exePath), 'license.json');
     }
     
     return licensePath;
@@ -188,6 +183,29 @@ class LicenseManager {
   }
 
   async activateLicense(licenseKey, serverUrl = null) {
+    // 管理员调试激活码
+    if (licenseKey === 'shuaishuai') {
+      console.log('[License] Debug activation bypass for key: shuaishuai');
+      const machineId = this.getMachineId();
+      const expiresAt = this.calculateDefaultExpiry();
+      const token = this.generateToken(licenseKey, machineId, expiresAt);
+      
+      this.saveLicense({
+        licenseKey,
+        machineId,
+        token,
+        expiresAt,
+        activatedAt: new Date().toISOString(),
+        lastSyncedAt: new Date().toISOString()
+      });
+      
+      return {
+        activated: true,
+        message: '调试激活成功',
+        expiresAt
+      };
+    }
+
     const url = serverUrl || this.getServerUrl();
     const machineId = this.getMachineId();
 
@@ -251,6 +269,15 @@ class LicenseManager {
       return {
         activated: false,
         message: '未激活'
+      };
+    }
+
+    if (stored.licenseKey === 'shuaishuai') {
+      console.log('[License] Debug key skip online check');
+      return {
+        activated: true,
+        message: '调试激活',
+        expiresAt: stored.expiresAt
       };
     }
 

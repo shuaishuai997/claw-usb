@@ -14,15 +14,20 @@ class ServiceManager {
   }
 
   getResourcesPath() {
+    if (process.env.NODE_ENV === 'development') {
+      return path.join(__dirname, '../resources');
+    }
     if (process.resourcesPath) {
       return process.resourcesPath;
     }
-    return path.join(__dirname, '../resources');
+
   }
 
   getConfigDir() {
-    // 配置文件目录：项目根目录下的 config/
-    return path.join(this.getResourcesPath(), '..', 'config');
+    const exePath = process.versions.electron 
+      ? require('electron').app.getPath('exe') 
+      : process.execPath;
+    return path.join(path.dirname(exePath), 'config');
   }
 
   getNodePath() {

@@ -192,7 +192,8 @@ ipcMain.on('set-workspace', (event, workspace) => {
 
 ipcMain.on('apply-model-config', (event, config) => {
   try {
-    const openclawConfigPath = path.join(__dirname, 'config', 'openclaw.json')
+    const exeDir = path.dirname(app.getPath('exe'))
+    const openclawConfigPath = path.join(exeDir, 'config', 'openclaw.json')
     
     if (!fs.existsSync(openclawConfigPath)) {
       event.reply('model-config-applied', { success: false, error: '配置文件不存在' })

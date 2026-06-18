@@ -1333,19 +1333,12 @@
       const modelListGroup = document.getElementById('model-list-group')
       const simpleTestGroup = document.getElementById('simple-test-group')
       
-      if (e.target.value === 'custom') {
-        apiAddressGroup.style.display = 'block'
-        apiTypeGroup.style.display = 'block'
-        testGroup.style.display = 'block'
-        modelListGroup.style.display = 'block'
-        simpleTestGroup.style.display = 'none'
-      } else {
-        apiAddressGroup.style.display = 'none'
-        apiTypeGroup.style.display = 'none'
-        testGroup.style.display = 'none'
-        modelListGroup.style.display = 'none'
-        simpleTestGroup.style.display = 'block'
-      }
+      // 所有 provider 都显示地址和 API 类型
+      apiAddressGroup.style.display = 'block'
+      apiTypeGroup.style.display = 'block'
+      testGroup.style.display = 'block'
+      modelListGroup.style.display = 'block'
+      simpleTestGroup.style.display = 'none'
     })
 
     ipcRenderer.on('api-key', (event, apiKey) => {

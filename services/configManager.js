@@ -3,8 +3,21 @@ const path = require('path');
 
 class ConfigManager {
   constructor() {
-    this.configPath = path.join(__dirname, '../config.json');
-    this.openclawConfigPath = path.join(__dirname, '../config/openclaw.json');
+    const exePath = process.versions.electron 
+      ? require('electron').app.getPath('exe') 
+      : process.execPath;
+    this.baseDir = path.dirname(exePath);
+    
+    this.configPath = path.join(this.baseDir, 'config.json');
+    this.openclawConfigPath = path.join(this.baseDir, 'config', 'openclaw.json');
+    
+    if (!fs.existsSync(this.baseDir)) {
+      fs.mkdirSync(this.baseDir, { recursive: true });
+    }
+    if (!fs.existsSync(path.join(this.baseDir, 'config'))) {
+      fs.mkdirSync(path.join(this.baseDir, 'config'), { recursive: true });
+    }
+    
     this.config = this.loadConfig();
   }
 

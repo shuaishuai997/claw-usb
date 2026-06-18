@@ -32,7 +32,7 @@
     ],
     "icon": "icon.ico",
     "requestedExecutionLevel": "requireAdministrator",
-    "signAndEditExecutable": true,
+    "signAndEditExecutable": false,
     "cscKeyPassword": "openclaw-dev",
     "forceCodeSigning": false,
     "artifactName": "${productName}-Setup-${version}.${ext}"
